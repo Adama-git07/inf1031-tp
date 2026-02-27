@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Citoyen Actif</string>
+    <string name="intro_text">
+    <![CDATA[
+    <b>Bienvenue sur Citoyen Actif<br/>Ensemble, améliorons notre ville.</b><br/><br/>
+    Connectez-vous pour signaler un bris ou suivre vos rapports.
+    ]]>
+</string>
 </resources>

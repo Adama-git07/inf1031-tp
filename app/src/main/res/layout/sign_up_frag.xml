@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-        <!-- Optionnel : LoginViewModel -->
+        <!-- Reserver pour les champs du databinding plutard -->
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

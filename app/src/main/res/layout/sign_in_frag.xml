@@ -38,36 +38,42 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
+                <!-- champ nom -->
                 <EditText
                     android:id="@+id/name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Nom"/>
 
+                <!-- champ prenom -->
                 <EditText
                     android:id="@+id/first_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Prenom"/>
 
+                <!-- champ adresse mail -->
                 <EditText
                     android:id="@+id/email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Adresse mail"/>
 
+                <!-- champ numero telephone -->
                 <EditText
                     android:id="@+id/phone_number"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Numéro de téléphone"/>
 
+                <!-- champ nom utilisateur -->
                 <EditText
                     android:id="@+id/username"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Nom d'utilisateur"/>
 
+                <!-- champ mot de passe -->
                 <EditText
                     android:id="@+id/password"
                     android:layout_width="match_parent"
@@ -75,6 +81,7 @@
                     android:hint="Mot de passe"
                     android:inputType="textPassword"/>
 
+                <!-- champ cormation mot de passe -->
                 <EditText
                     android:id="@+id/confirm_password"
                     android:layout_width="match_parent"
@@ -89,6 +96,7 @@
                     android:orientation="horizontal"
                     android:layout_marginTop="12dp">
 
+                    <!-- button Annuler -->
                     <Button
                         android:id="@+id/cancel_button"
                         android:layout_width="0dp"
@@ -97,10 +105,12 @@
                         android:text="ANNULER"
                         android:backgroundTint="#D32F2F"/>
 
+                    <!-- espace entre les buttons -->
                     <Space
                         android:layout_width="16dp"
                         android:layout_height="wrap_content"/>
 
+                    <!-- button confirmer -->
                     <Button
                         android:id="@+id/confirm_button"
                         android:layout_width="0dp"

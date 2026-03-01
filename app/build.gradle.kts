@@ -6,6 +6,11 @@ android {
     namespace = "com.example.citoyenactif"
     compileSdk = 35
 
+        buildFeatures {
+            dataBinding = true
+        }
+    
+
     defaultConfig {
         applicationId = "com.example.citoyenactif"
         minSdk = 24

@@ -1,0 +1,70 @@
+package com.example.citoyenactif.authentification;
+
+import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.Fragment;
+
+import com.example.citoyenactif.R;
+import com.example.citoyenactif.authentification.fragment.ResetPasswordFrag;
+import com.example.citoyenactif.authentification.fragment.SignUpFrag;
+import com.example.citoyenactif.authentification.fragment.SignInFrag;
+import com.example.citoyenactif.databinding.AuthentificationBinding;
+
+public class AuthentificationActivity extends AppCompatActivity {
+    private AuthentificationBinding binder;
+
+    public void onCreate (Bundle saveInstanceState){
+        super.onCreate(saveInstanceState);
+        binder = DataBindingUtil.setContentView(this, R.layout.authentification);
+
+        // 1) Charger le fragment de connexion par défaut (SignIn)
+        if (saveInstanceState == null) {
+            push(new SignInFrag(), false);
+        }
+
+        // 2) Lien "Créer un compte" -> SignUp
+        binder.tvCreateAccount.setOnClickListener(v ->
+                push(new SignUpFrag(), true)
+        );
+
+        // 3) Lien "Mot de passe oublié ?" -> ResetPassword
+        binder.tvForgotPassword.setOnClickListener(v ->
+                push(new ResetPasswordFrag(), true)
+        );
+
+    }
+
+    /**
+     * Charge un fragment dans le FragmentContainerView.
+     *
+     * @param frag fragment à afficher
+     * @param addToBackStack indique si le fragment doit être ajouté à la pile de navigation (BackStack)
+     *
+     * Règle importante :
+     * - Le premier fragment chargé dans l'activité (fragment initial)
+     *   NE DOIT PAS être ajouté au BackStack.
+     *   Sinon, lorsque l'utilisateur appuie sur le bouton "Retour",
+     *   l'écran deviendra vide car il n'y aura plus de fragment à afficher.
+     *
+     * - Les fragments chargés suite à une action utilisateur
+     *   (ex : SignUp ou ResetPassword) doivent être ajoutés au BackStack
+     *   afin de permettre le retour vers l'écran précédent.
+     */
+    private void push(Fragment frag, boolean addToBackStack) {
+
+        if (addToBackStack) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.auth_frag_container, frag)
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.auth_frag_container, frag)
+                    .commit();
+        }
+    }
+}

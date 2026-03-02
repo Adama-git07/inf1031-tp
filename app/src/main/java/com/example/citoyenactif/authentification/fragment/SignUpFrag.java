@@ -8,15 +8,13 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.example.citoyenactif.databinding.SignUpFragBinding;
+import com.example.citoyenactif.databinding.SignInFragBinding;
 
 public class SignUpFrag extends Fragment {
-    private SignUpFragBinding binder;
+    SignInFragBinding binder;
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container,
-                             Bundle saveInstanceState){
-        binder = SignUpFragBinding.inflate(inflater, container, false);
-        return binder.getRoot();
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle saveInstanceState){
+        return SignInFragBinding.inflate(inflater,container, false).getRoot();
     }
+
 }

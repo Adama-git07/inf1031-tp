@@ -17,7 +17,8 @@
             android:textStyle="bold"
             android:textSize="18sp"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
         <!-- Plus tard : RecyclerView + FAB -->
     </androidx.constraintlayout.widget.ConstraintLayout>

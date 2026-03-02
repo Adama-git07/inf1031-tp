@@ -1,4 +1,4 @@
-package com.example.citoyenactif.authentification.fragment;
+package com.example.citoyenactif.ui.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.example.citoyenactif.authentification.AuthentificationActivity;
+import com.example.citoyenactif.ui.AuthentificationActivity;
 import com.example.citoyenactif.databinding.ResetPasswordFragBinding;
 
 public class ResetPasswordFrag extends Fragment {

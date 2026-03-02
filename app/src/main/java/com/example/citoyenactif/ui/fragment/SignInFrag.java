@@ -1,4 +1,4 @@
-package com.example.citoyenactif.authentification.fragment;
+package com.example.citoyenactif.ui.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;

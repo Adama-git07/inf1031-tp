@@ -8,13 +8,19 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.example.citoyenactif.authentification.AuthentificationActivity;
 import com.example.citoyenactif.databinding.ResetPasswordFragBinding;
 
 public class ResetPasswordFrag extends Fragment {
     private ResetPasswordFragBinding binder;
 
     public View onCreateView (@NonNull LayoutInflater inflater, ViewGroup container, Bundle saveInstanceState){
-        return ResetPasswordFragBinding.inflate(inflater, container,false).getRoot();
+        binder = ResetPasswordFragBinding.inflate(inflater, container, false);
+        // Retourne à la page d'accueil
+        binder.cancelButton.setOnClickListener(v -> {
+            ((AuthentificationActivity) requireActivity()).goToSignIn();
+        });
+        return binder.getRoot();
     }
 
 }

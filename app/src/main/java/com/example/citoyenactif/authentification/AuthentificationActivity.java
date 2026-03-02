@@ -67,4 +67,22 @@ public class AuthentificationActivity extends AppCompatActivity {
                     .commit();
         }
     }
+
+    /**
+     * Redirige l'utilisateur vers le fragment de connexion (SignInFrag).
+     *
+     * Cette méthode est appelée depuis un fragment (ex : SignUpFrag ou ResetPasswordFrag)
+     * lorsque l'utilisateur souhaite annuler l'action en cours et revenir
+     * à l'écran de connexion.
+     *
+     * Le fragment SignIn est chargé sans être ajouté au BackStack
+     * (addToBackStack = false), car il représente l'écran de base
+     * de l'activité d'authentification.
+     *
+     * Cela garantit qu'un appui sur le bouton "Retour"
+     * ne laissera pas l'écran vide.
+     */
+    public void goToSignIn() {
+        push(new SignInFrag(), false);
+    }
 }

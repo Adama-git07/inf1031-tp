@@ -27,5 +27,5 @@ public class UserCreateDTO {
     public String email;
 
     /** Rôle de l'utilisateur */
-    public UserRoles roles;
+    public UserRoles role;
 }

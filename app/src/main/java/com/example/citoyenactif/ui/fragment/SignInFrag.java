@@ -102,7 +102,7 @@ public class SignInFrag extends Fragment {
                 } else {
                     // Identifiants incorrects
                     Toast.makeText(getContext(),
-                            "Login ou mot de passe incorrect",
+                            "Login et/ou mot de passe incorrect",
                             Toast.LENGTH_SHORT).show();
                 }
             });

@@ -68,4 +68,14 @@ public interface UserDao {
      */
     @Query("SELECT * FROM users WHERE (username = :login OR email = :login) AND password = :password LIMIT 1")
     UserEntity login(String login, String password);
+
+    /**
+     * Met à jour le mot de passe d'un utilisateur à partir de son username.
+     *
+     * @param username nom d'utilisateur
+     * @param newPassword nouveau mot de passe
+     * @return nombre de lignes modifiées (0 = utilisateur introuvable, 1 = succès)
+     */
+    @Query("UPDATE users SET password = :newPassword WHERE username = :username")
+    int updatePasswordByUsername(String username, String newPassword);
 }

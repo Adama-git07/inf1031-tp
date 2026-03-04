@@ -23,4 +23,10 @@ public interface AgentDao {
 
     @Query("SELECT * FROM agents WHERE agentNumber = :agentNumber AND password = :password LIMIT 1")
     AgentEntity login(String agentNumber, String password);
+
+    @Query("SELECT * FROM agents WHERE agentNumber = :agentNumber LIMIT 1")
+    AgentEntity findByAgentNumber(String agentNumber);
+
+    @Query("SELECT * FROM agents ORDER BY id DESC")
+    List<AgentEntity> getAll();
 }

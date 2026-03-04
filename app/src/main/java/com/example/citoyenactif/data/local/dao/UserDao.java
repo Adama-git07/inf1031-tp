@@ -66,7 +66,10 @@ public interface UserDao {
      * - De se connecter avec username OU email
      * - De vérifier que le mot de passe correspond
      */
-    @Query("SELECT * FROM users WHERE (username = :login OR email = :login) AND password = :password LIMIT 1")
+    @Query("SELECT * FROM users " +
+            "WHERE (username = :login OR email = :login) " +
+            "AND password = :password " +
+            "LIMIT 1")
     UserEntity login(String login, String password);
 
     /**
@@ -78,4 +81,7 @@ public interface UserDao {
      */
     @Query("UPDATE users SET password = :newPassword WHERE username = :username")
     int updatePasswordByUsername(String username, String newPassword);
+
+    @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
+    UserEntity getById(long id);
 }

@@ -89,4 +89,8 @@ public class UserRepository {
         int rows = userDao.updatePasswordByUsername(username, newPassword);
         return rows > 0;
     }
+
+    public UserEntity getById(long id) {
+        return userDao.getById(id);
+    }
 }

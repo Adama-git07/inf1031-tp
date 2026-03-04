@@ -18,86 +18,66 @@ import com.example.citoyenactif.databinding.SignUpFragBinding;
 /**
  * Fragment de création de compte (SignUp).
  *
- * Ce fragment permet à un utilisateur
- * de créer un nouveau compte dans l'application.
- *
- * Il récupère les informations saisies,
- * puis appelle le Repository pour enregistrer
- * l'utilisateur dans la base de données Room.
+ * Crée uniquement des comptes citoyens (UserRoles.CITIZEN),
+ * puis redirige automatiquement vers le fragment de connexion.
  */
 public class SignUpFrag extends Fragment {
 
-    /**
-     * Binding généré automatiquement pour accéder
-     * aux vues du layout sign_up_frag.xml.
-     */
     private SignUpFragBinding binder;
 
-    /**
-     * Création et initialisation de la vue du fragment.
-     */
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // Liaison entre le XML et le code Java
         binder = SignUpFragBinding.inflate(inflater, container, false);
 
-        /**
-         * Bouton Annuler :
-         * Retourne vers l'écran de connexion (SignIn).
-         */
+        // Annuler -> retour à la connexion
         binder.cancelButton.setOnClickListener(v ->
                 ((AuthentificationActivity) requireActivity()).goToSignIn()
         );
 
-        /**
-         * Bouton Confirmer :
-         * Lance le processus de création du compte.
-         */
-        binder.confirmButton.setOnClickListener(v -> {
+        // Confirmer -> création compte
+        binder.confirmButton.setOnClickListener(v -> createAccount());
 
-            // Room ne peut pas être appelé sur le thread principal
-            new Thread(() -> {
-
-                try {
-                    // Création du repository
-                    UserRepository repo = new UserRepository(requireContext());
-
-                    // Création du DTO à partir des champs saisis
-                    UserCreateDTO dto = new UserCreateDTO();
-                    dto.username = binder.username.getText().toString().trim();
-                    dto.email = binder.email.getText().toString().trim();
-                    dto.password = binder.password.getText().toString().trim();
-
-                    // Attribution du rôle par défaut (CITIZEN)
-                    dto.role = UserRoles.valueOf(UserRoles.CITIZEN.name());
-
-                    // Enregistrement en base
-                    long id = repo.register(dto);
-
-                    // Retour au thread UI pour afficher un message
-                    requireActivity().runOnUiThread(() ->
-                            Toast.makeText(getContext(),
-                                    "Compte créé (id=" + id + ")",
-                                    Toast.LENGTH_SHORT).show()
-                    );
-
-                } catch (Exception e) {
-
-                    // Gestion d'erreur (ex : username/email déjà utilisé)
-                    requireActivity().runOnUiThread(() ->
-                            Toast.makeText(getContext(),
-                                    "Erreur : username/email déjà utilisé",
-                                    Toast.LENGTH_SHORT).show()
-                    );
-                }
-
-            }).start();
-        });
-
-        // Retourne la vue racine du fragment
         return binder.getRoot();
+    }
+
+    /**
+     * Crée un compte citoyen dans Room dans un thread secondaire.
+     */
+    private void createAccount() {
+
+        new Thread(() -> {
+            try {
+                UserRepository repo = new UserRepository(requireContext());
+
+                UserCreateDTO dto = new UserCreateDTO();
+                dto.username = binder.username.getText().toString().trim();
+                dto.email = binder.email.getText().toString().trim();
+                dto.password = binder.password.getText().toString().trim();
+
+                //SignUp = citoyen uniquement
+                dto.role = UserRoles.CITIZEN;
+
+                long id = repo.register(dto);
+
+                requireActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(),
+                            "Compte créé (id=" + id + "). Connectez-vous.",
+                            Toast.LENGTH_SHORT).show();
+
+                    //retour automatique au fragment de connexion
+                    ((AuthentificationActivity) requireActivity()).goToSignIn();
+                });
+
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(getContext(),
+                                "Erreur : username/email déjà utilisé",
+                                Toast.LENGTH_SHORT).show()
+                );
+            }
+        }).start();
     }
 }

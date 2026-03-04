@@ -25,6 +25,8 @@
 
         </activity>
         <activity android:name=".ui.citizen.CitizenPageActivity" />
+        <activity android:name=".ui.report.ReportActivity" />
+        <activity android:name=".ui.municipal.MunicipalPageActivity"/>
 
     </application>
 

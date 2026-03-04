@@ -7,13 +7,14 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.R;
+import com.example.citoyenactif.databinding.AuthentificationActivityBinding;
 import com.example.citoyenactif.ui.authentification.fragment.ResetPasswordFrag;
 import com.example.citoyenactif.ui.authentification.fragment.SignUpFrag;
 import com.example.citoyenactif.ui.authentification.fragment.SignInFrag;
-import com.example.citoyenactif.databinding.AuthentificationBinding;
+
 
 public class AuthentificationActivity extends AppCompatActivity {
-    private AuthentificationBinding binder;
+    private AuthentificationActivityBinding binder;
 
     public void onCreate (Bundle saveInstanceState){
         super.onCreate(saveInstanceState);

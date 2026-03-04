@@ -2,51 +2,70 @@ package com.example.citoyenactif.ui.citizen;
 
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.R;
-import com.example.citoyenactif.ui.citizen.fragment.ProfilFragment;
-import com.example.citoyenactif.ui.citizen.fragment.ReportsListFragment;
-import com.example.citoyenactif.ui.citizen.fragment.ReportMapFragment;
 import com.example.citoyenactif.databinding.CitizenPageActivityBinding;
+import com.example.citoyenactif.ui.citizen.fragment.ProfilFragment;
+import com.example.citoyenactif.ui.citizen.fragment.ReportMapFragment;
+import com.example.citoyenactif.ui.citizen.fragment.ReportsListFragment;
 
 /**
- * Class CitizenPageActivity affiche un menu (BottomNavigationView)
- * charge un fragment dans un FragmentContainerView
+ * CitizenPageActivity est la page principale côté citoyen.
+ *
+ * Elle contient :
+ * - Un FragmentContainerView (conteneur)
+ * - Un BottomNavigationView (menu)
+ *
+ * Elle charge les fragments suivants :
+ * - ReportsListFragment (liste des rapports)
+ * - ReportMapFragment (carte des rapports)
+ * - ProfilFragment (profil utilisateur)
  */
 public class CitizenPageActivity extends AppCompatActivity {
 
     private CitizenPageActivityBinding binder;
 
-    protected void onCreate ( Bundle saveInstanceState){
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        super.onCreate(saveInstanceState);
-        binder = DataBindingUtil.setContentView( this, R.layout.citizen_page_activity );
+        // DataBinding : citizen_page_activity.xml
+        binder = DataBindingUtil.setContentView(this, R.layout.citizen_page_activity);
 
-        //charger le fragment de la liste des rapports par defaut
-        if ( saveInstanceState == null){
-            push( new ReportsListFragment());
+        // Charger le fragment par défaut uniquement au premier lancement
+        if (savedInstanceState == null) {
+            push(new ReportsListFragment());
             binder.bottomNav.setSelectedItemId(R.id.nav_reports);
         }
-        //recuperation des selection sur le menu de navigation
-        binder.bottomNav.setOnItemSelectedListener( item -> {
+
+        // Gérer la sélection sur le menu de navigation
+        binder.bottomNav.setOnItemSelectedListener(item -> {
+
             Fragment selection;
             int id = item.getItemId();
 
-            if ( id == R.id.nav_reports){
+            if (id == R.id.nav_reports) {
                 selection = new ReportsListFragment();
-            } else if ( id == R.id.nav_map){
+            } else if (id == R.id.nav_map) {
                 selection = new ReportMapFragment();
             } else {
                 selection = new ProfilFragment();
             }
+
             push(selection);
             return true;
         });
     }
 
+    /**
+     * Charge un fragment dans le conteneur principal.
+     *
+     * @param frag fragment à afficher
+     */
     private void push(Fragment frag) {
         getSupportFragmentManager()
                 .beginTransaction()

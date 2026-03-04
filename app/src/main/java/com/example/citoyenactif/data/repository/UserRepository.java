@@ -77,4 +77,16 @@ public class UserRepository {
     public UserEntity login(String login, String password){
         return userDao.login(login,password);
     }
+
+    /**
+     * Réinitialise le mot de passe d'un utilisateur à partir de son username.
+     *
+     * @param username nom d'utilisateur
+     * @param newPassword nouveau mot de passe
+     * @return true si la mise à jour a réussi (utilisateur trouvé), sinon false
+     */
+    public boolean resetPasswordByUsername(String username, String newPassword) {
+        int rows = userDao.updatePasswordByUsername(username, newPassword);
+        return rows > 0;
+    }
 }

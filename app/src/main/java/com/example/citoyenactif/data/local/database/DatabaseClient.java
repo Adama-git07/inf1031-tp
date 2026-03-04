@@ -29,10 +29,10 @@ public class DatabaseClient {
                         DataBase.class,
                         "citoyen_actif_db"
                 )
-                // ✅ évite les erreurs de migration pendant le développement
+                //évite les erreurs de migration pendant le développement
                 .fallbackToDestructiveMigration()
 
-                // ✅ Seed : création des comptes agents par défaut à la création de la BD
+                //Seed : création des comptes agents par défaut à la création de la BD
                 .addCallback(new RoomDatabase.Callback() {
                     @Override
                     public void onCreate(@NonNull SupportSQLiteDatabase dbSql) {

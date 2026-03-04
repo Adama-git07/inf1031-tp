@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.R;
@@ -11,6 +12,7 @@ import com.example.citoyenactif.databinding.AuthentificationActivityBinding;
 import com.example.citoyenactif.ui.authentification.fragment.ResetPasswordFrag;
 import com.example.citoyenactif.ui.authentification.fragment.SignUpFrag;
 import com.example.citoyenactif.ui.authentification.fragment.SignInFrag;
+import com.example.citoyenactif.util.SeedData;
 
 
 public class AuthentificationActivity extends AppCompatActivity {
@@ -34,6 +36,8 @@ public class AuthentificationActivity extends AppCompatActivity {
         binder.tvForgotPassword.setOnClickListener(v ->
                 push(new ResetPasswordFrag(), true)
         );
+
+        SeedData.seedAgents(this); //ajoute les agents
 
     }
 

@@ -24,9 +24,12 @@
             </intent-filter>
 
         </activity>
-        <activity android:name=".ui.citizen.CitizenPageActivity" />
-        <activity android:name=".ui.report.ReportActivity" />
-        <activity android:name=".ui.municipal.MunicipalPageActivity"/>
+        <activity android:name=".ui.citizen.CitizenPageActivity"
+            android:theme="@style/Theme.CitoyenActif.NoActionBar" />
+        <activity android:name=".ui.report.ReportActivity"
+            android:theme="@style/Theme.CitoyenActif.NoActionBar" />
+        <activity android:name=".ui.municipal.MunicipalPageActivity"
+            android:theme="@style/Theme.CitoyenActif.NoActionBar" />
 
     </application>
 

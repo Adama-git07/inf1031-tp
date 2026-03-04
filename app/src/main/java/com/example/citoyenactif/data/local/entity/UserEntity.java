@@ -62,4 +62,5 @@ public class UserEntity {
      * Stockée sous forme de timestamp (millisecondes).
      */
     public long createdAt;
+
 }

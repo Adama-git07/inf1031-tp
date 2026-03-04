@@ -1,4 +1,4 @@
-package com.example.citoyenactif.citizen.fragment;
+package com.example.citoyenactif.ui.citizen.fragment;
 
 import androidx.fragment.app.Fragment;
 

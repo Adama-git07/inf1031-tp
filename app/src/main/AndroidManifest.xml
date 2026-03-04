@@ -14,7 +14,7 @@
         tools:targetApi="31" >
 
         <activity
-            android:name=".ui.AuthentificationActivity"
+            android:name=".ui.authentification.AuthentificationActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
 
@@ -24,7 +24,7 @@
             </intent-filter>
 
         </activity>
-        <activity android:name=".citizen.CitizenPageActivity" />
+        <activity android:name=".ui.citizen.CitizenPageActivity" />
 
     </application>
 

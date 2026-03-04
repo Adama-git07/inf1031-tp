@@ -1,4 +1,4 @@
-package com.example.citoyenactif.citizen.fragment;
+package com.example.citoyenactif.ui.citizen.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.databinding.RepportsMapFragmentBinding;
 
-public class RepportMapFragment extends Fragment {
+public class ReportMapFragment extends Fragment {
 
     private RepportsMapFragmentBinding binder;
 

@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
     <data>
-        <!-- Reserver pour les champs du databinding plutard -->
+        
     </data>
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -24,39 +22,106 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Champ Username -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilUsername"
+        <!-- Choix du type de compte (Citoyen ou Agent -->
+        <RadioGroup
+            android:id="@+id/rgAccountType"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:hint="Nom d'utilisateur"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp"
             app:layout_constraintTop_toBottomOf="@id/tvLoginTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
+            <!-- Citoyen -->
+            <RadioButton
+                android:id="@+id/rbCitizen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Citoyen"
+                android:checked="true"/>
+
+            <!-- Agent municipal -->
+            <RadioButton
+                android:id="@+id/rbAgent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Agent municipal"/>
+        </RadioGroup>
+
+            <!-- Formulaire Citoyen -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilUsername"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:hint="Nom d'utilisateur ou email"
+                app:layout_constraintTop_toBottomOf="@id/rgAccountType"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etUsername"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPassword"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Mot de passe"
+                app:endIconMode="password_toggle"
+                app:layout_constraintTop_toBottomOf="@id/tilUsername"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Formulaire Agent -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilAgentNumber"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:hint="Numéro d'agent"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/rgAccountType"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etUsername"
+                android:id="@+id/etAgentNumber"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:maxLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Champ Password -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilPassword"
+            android:id="@+id/tilAgentPassword"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:hint="Mot de passe"
+            android:visibility="gone"
             app:endIconMode="password_toggle"
-            app:layout_constraintTop_toBottomOf="@id/tilUsername"
+            app:layout_constraintTop_toBottomOf="@id/tilAgentNumber"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPassword"
+                android:id="@+id/etAgentPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
@@ -75,5 +140,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:backgroundTint="#1B5E20"/>
 
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </layout>

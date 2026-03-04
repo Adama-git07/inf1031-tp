@@ -1,4 +1,4 @@
-package com.example.citoyenactif.citizen;
+package com.example.citoyenactif.ui.citizen;
 
 import android.os.Bundle;
 
@@ -7,9 +7,9 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.R;
-import com.example.citoyenactif.citizen.fragment.ProfilFragment;
-import com.example.citoyenactif.citizen.fragment.ReportsListFragment;
-import com.example.citoyenactif.citizen.fragment.RepportMapFragment;
+import com.example.citoyenactif.ui.citizen.fragment.ProfilFragment;
+import com.example.citoyenactif.ui.citizen.fragment.ReportsListFragment;
+import com.example.citoyenactif.ui.citizen.fragment.ReportMapFragment;
 import com.example.citoyenactif.databinding.CitizenPageActivityBinding;
 
 /**
@@ -38,7 +38,7 @@ public class CitizenPageActivity extends AppCompatActivity {
             if ( id == R.id.nav_reports){
                 selection = new ReportsListFragment();
             } else if ( id == R.id.nav_map){
-                selection = new RepportMapFragment();
+                selection = new ReportMapFragment();
             } else {
                 selection = new ProfilFragment();
             }

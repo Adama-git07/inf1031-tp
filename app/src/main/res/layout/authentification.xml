@@ -12,9 +12,7 @@
         android:layout_height="match_parent"
         android:padding="16dp">
 
-        <!-- ===================== -->
         <!-- TEXTE INTRODUCTION    -->
-        <!-- ===================== -->
 
         <TextView
             android:id="@+id/tvIntro"

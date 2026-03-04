@@ -1,4 +1,4 @@
-package com.example.citoyenactif.ui.fragment;
+package com.example.citoyenactif.ui.authentification.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.data.repository.UserRepository;
 import com.example.citoyenactif.databinding.ResetPasswordFragBinding;
-import com.example.citoyenactif.ui.AuthentificationActivity;
+import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
 
 /**
  * Fragment permettant de réinitialiser le mot de passe d'un utilisateur.

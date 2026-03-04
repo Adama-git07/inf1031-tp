@@ -1,4 +1,4 @@
-package com.example.citoyenactif.ui.fragment;
+package com.example.citoyenactif.ui.authentification.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,7 +12,7 @@ import androidx.fragment.app.Fragment;
 import com.example.citoyenactif.data.repository.UserRepository;
 import com.example.citoyenactif.model.dto.UserCreateDTO;
 import com.example.citoyenactif.model.enums.UserRoles;
-import com.example.citoyenactif.ui.AuthentificationActivity;
+import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
 import com.example.citoyenactif.databinding.SignUpFragBinding;
 
 /**

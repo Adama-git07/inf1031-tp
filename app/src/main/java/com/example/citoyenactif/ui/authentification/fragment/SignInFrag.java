@@ -1,4 +1,4 @@
-package com.example.citoyenactif.ui.fragment;
+package com.example.citoyenactif.ui.authentification.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,7 +10,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.example.citoyenactif.citizen.CitizenPageActivity;
+import com.example.citoyenactif.ui.citizen.CitizenPageActivity;
 import com.example.citoyenactif.data.local.entity.UserEntity;
 import com.example.citoyenactif.data.repository.UserRepository;
 import com.example.citoyenactif.databinding.SignInFragBinding;

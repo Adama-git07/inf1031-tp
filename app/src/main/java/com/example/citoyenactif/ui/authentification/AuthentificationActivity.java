@@ -1,4 +1,4 @@
-package com.example.citoyenactif.ui;
+package com.example.citoyenactif.ui.authentification;
 
 import android.os.Bundle;
 
@@ -7,9 +7,9 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.R;
-import com.example.citoyenactif.ui.fragment.ResetPasswordFrag;
-import com.example.citoyenactif.ui.fragment.SignUpFrag;
-import com.example.citoyenactif.ui.fragment.SignInFrag;
+import com.example.citoyenactif.ui.authentification.fragment.ResetPasswordFrag;
+import com.example.citoyenactif.ui.authentification.fragment.SignUpFrag;
+import com.example.citoyenactif.ui.authentification.fragment.SignInFrag;
 import com.example.citoyenactif.databinding.AuthentificationBinding;
 
 public class AuthentificationActivity extends AppCompatActivity {

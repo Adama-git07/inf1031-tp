@@ -17,7 +17,7 @@ public class AuthentificationActivity extends AppCompatActivity {
 
     public void onCreate (Bundle saveInstanceState){
         super.onCreate(saveInstanceState);
-        binder = DataBindingUtil.setContentView(this, R.layout.authentification);
+        binder = DataBindingUtil.setContentView(this, R.layout.authentification_activity);
 
         // 1) Charger le fragment de connexion par défaut (SignIn)
         if (saveInstanceState == null) {

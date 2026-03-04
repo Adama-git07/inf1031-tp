@@ -5,6 +5,14 @@
     <b>Bienvenue sur Citoyen Actif<br/>Ensemble, améliorons notre ville.</b><br/><br/>
     Connectez-vous pour signaler un bris ou suivre vos rapports.
     ]]>
-</string>
+    </string>
     <string name="citizen_page_welcome">Bienvenue sur Citoyen Actif\nConsultez vos rapports ou ajoutez-en un nouveau.</string>
+    <string-array name="report_categories">
+        <item>Choisir une catégorie...</item>
+        <item>Nid-de-poule</item>
+        <item>Lampadaire défectueux</item>
+        <item>Graffiti</item>
+        <item>Débris sur la voie</item>
+        <item>Banc brisé</item>
+    </string-array>
 </resources>

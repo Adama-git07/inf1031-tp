@@ -1,10 +1,19 @@
 package com.example.citoyenactif.ui.report;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.view.View;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.databinding.DataBindingUtil;
 
 import com.example.citoyenactif.R;
@@ -13,30 +22,86 @@ import com.example.citoyenactif.databinding.ReportActivityBinding;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportCategory;
 
-/**
- * Activité permettant d'ajouter un rapport de bris.
- * Récupère les informations du formulaire, valide les champs,
- * puis enregistre le rapport dans Room via ReportRepository.
- */
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class ReportActivity extends AppCompatActivity {
 
     private ReportActivityBinding binding;
+    private Uri photoUri = null;
+
+    // ✅ Launcher caméra
+    private final ActivityResultLauncher<Uri> cameraLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
+                if (success && photoUri != null) {
+                    binding.ivPhoto.setImageURI(photoUri);
+                    binding.ivPhoto.setVisibility(View.VISIBLE);
+                    Toast.makeText(this, "Photo ajoutée ✓", Toast.LENGTH_SHORT).show();
+                } else {
+                    photoUri = null;
+                    Toast.makeText(this, "Photo annulée", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    // ✅ Launcher permission caméra
+    private final ActivityResultLauncher<String> permissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (granted) {
+                    openCamera(); // permission accordée → ouvre la caméra
+                } else {
+                    Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_SHORT).show();
+                }
+            });
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // DataBinding : report_activity.xml
         binding = DataBindingUtil.setContentView(this, R.layout.report_activity);
 
         binding.btnCancelReport.setOnClickListener(v -> finish());
         binding.btnSaveReport.setOnClickListener(v -> saveReport());
+
+        // ✅ Vérifier permission avant d'ouvrir la caméra
+        binding.btnTakePhoto.setOnClickListener(v -> checkCameraPermission());
     }
 
     /**
-     * Valide le formulaire puis enregistre le rapport dans Room
-     * dans un thread secondaire via le DTO et le Repository.
+     * Vérifie si la permission caméra est accordée,
+     * sinon la demande au runtime.
      */
+    private void checkCameraPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            openCamera(); // déjà accordée
+        } else {
+            permissionLauncher.launch(Manifest.permission.CAMERA); // demander
+        }
+    }
+
+    private void openCamera() {
+        try {
+            File photoFile = createImageFile();
+            photoUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".fileprovider",
+                    photoFile
+            );
+            cameraLauncher.launch(photoUri);
+        } catch (Exception e) {
+            Toast.makeText(this, "Erreur caméra : " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        return File.createTempFile("REPORT_" + timestamp, ".jpg", storageDir);
+    }
+
     private void saveReport() {
 
         final String title = binding.etTitle.getText().toString().trim();
@@ -52,43 +117,34 @@ public class ReportActivity extends AppCompatActivity {
             return;
         }
 
-        // Spinner : "Choisir une catégorie..." est à l'index 0
         int pos = binding.spCategory.getSelectedItemPosition();
         if (pos == 0) {
             Toast.makeText(this, "Veuillez choisir une catégorie", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Mappage index spinner → enum (ordre : VOIRIE, ECLAIRAGE, PARC, AQUEDUC, AUTRE)
         final ReportCategory category = ReportCategory.values()[pos - 1];
 
-        // ✅ On passe par le DTO — jamais ReportEntity directement ici
         ReportCreateDTO dto = new ReportCreateDTO();
         dto.title       = title;
         dto.description = description;
         dto.category    = category;
-        dto.photoUri    = null;  // TODO : photo avec caméra
-        dto.latitude    = 0.0;  // TODO : GPS réel
+        dto.photoUri    = photoUri != null ? photoUri.toString() : null;
+        dto.latitude    = 0.0;
         dto.longitude   = 0.0;
-        dto.citizenId   = 0;    // TODO : récupérer via SessionManager
+        dto.citizenId   = 0; // TODO : SessionManager
 
-        // ✅ Thread secondaire conservé
         new Thread(() -> {
             try {
-                // ✅ getApplication() (Application), pas getApplicationContext() (Context)
                 ReportRepository repo = new ReportRepository(getApplication());
-
-                // ✅ insert(dto) — repo gère la conversion DTO → Entity
                 repo.insert(dto);
-
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Rapport enregistré !", Toast.LENGTH_SHORT).show();
                     finish();
                 });
-
             } catch (Exception e) {
                 runOnUiThread(() ->
-                        Toast.makeText(this, "Erreur lors de l'enregistrement", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
             }
         }).start();

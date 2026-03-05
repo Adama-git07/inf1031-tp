@@ -1,5 +1,6 @@
 package com.example.citoyenactif.ui.citizen.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.citoyenactif.databinding.RepportsListFragmentBinding;
 import com.example.citoyenactif.ui.citizen.ReportViewModel;
 import com.example.citoyenactif.ui.citizen.adapter.ReportAdapter;
+import com.example.citoyenactif.ui.report.ReportActivity;
 
 public class ReportsListFragment extends Fragment {
 
@@ -36,13 +38,11 @@ public class ReportsListFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
 
-        // Nouveau adapter avec 2 listeners
         adapter = new ReportAdapter(
                 report -> {
                     // TODO: ouvrir détails rapport
                 },
                 report -> {
-                    // Suppression par appui long
                     viewModel.delete(report);
                 }
         );
@@ -54,8 +54,10 @@ public class ReportsListFragment extends Fragment {
             adapter.setItems(reports);
         });
 
+        // ✅ FAB branché
         binder.fabAddReport.setOnClickListener(v -> {
-            // TODO: ouvrir formulaire ajout rapport
+            Intent intent = new Intent(requireContext(), ReportActivity.class);
+            startActivity(intent);
         });
     }
 }

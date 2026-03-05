@@ -2,66 +2,45 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data></data>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardReport"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp"
         android:padding="12dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tvReportTitle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:padding="12dp">
+            android:textStyle="bold"
+            android:textSize="16sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Titre -->
-            <TextView
-                android:id="@+id/tvItemTitle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="Titre du rapport"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+        <TextView
+            android:id="@+id/tvReportCategory"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="13sp"
+            android:textColor="#666666"
+            app:layout_constraintTop_toBottomOf="@id/tvReportTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Catégorie -->
-            <TextView
-                android:id="@+id/tvItemCategory"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Catégorie"
-                android:layout_marginTop="6dp"
-                app:layout_constraintTop_toBottomOf="@id/tvItemTitle"
-                app:layout_constraintStart_toStartOf="parent" />
+        <TextView
+            android:id="@+id/tvReportStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12sp"
+            android:textColor="#FFFFFF"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:background="#6200EE"
+            app:layout_constraintTop_toBottomOf="@id/tvReportCategory"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
-            <!-- Statut -->
-            <TextView
-                android:id="@+id/tvItemStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Statut"
-                android:textStyle="bold"
-                android:layout_marginTop="6dp"
-                app:layout_constraintTop_toBottomOf="@id/tvItemTitle"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <!-- Date (timestamp affiché plus tard) -->
-            <TextView
-                android:id="@+id/tvItemDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Date"
-                android:layout_marginTop="10dp"
-                app:layout_constraintTop_toBottomOf="@id/tvItemCategory"
-                app:layout_constraintStart_toStartOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

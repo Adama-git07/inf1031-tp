@@ -8,7 +8,7 @@
         android:padding="12dp">
 
         <TextView
-            android:id="@+id/tvReportTitle"
+            android:id="@+id/tvItemTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textStyle="bold"
@@ -18,18 +18,18 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
-            android:id="@+id/tvReportCategory"
+            android:id="@+id/tvItemCategory"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:textSize="13sp"
             android:textColor="#666666"
-            app:layout_constraintTop_toBottomOf="@id/tvReportTitle"
+            app:layout_constraintTop_toBottomOf="@id/tvItemTitle"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
-            android:id="@+id/tvReportStatus"
+            android:id="@+id/tvItemStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -38,7 +38,7 @@
             android:paddingHorizontal="8dp"
             android:paddingVertical="2dp"
             android:background="#6200EE"
-            app:layout_constraintTop_toBottomOf="@id/tvReportCategory"
+            app:layout_constraintTop_toBottomOf="@id/tvItemCategory"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 

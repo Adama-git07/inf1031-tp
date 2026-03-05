@@ -12,8 +12,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.citoyenactif.databinding.RepportsListFragmentBinding;
-import com.example.citoyenactif.ui.citizen.ReportAdapter;
 import com.example.citoyenactif.ui.citizen.ReportViewModel;
+import com.example.citoyenactif.ui.citizen.adapter.ReportAdapter;
 
 public class ReportsListFragment extends Fragment {
 
@@ -34,27 +34,26 @@ public class ReportsListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialisation ViewModel
         viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
 
-        // Initialisation RecyclerView
-        adapter = new ReportAdapter(report -> {
-            // TODO: ouvrir détails rapport
-        });
+        // Nouveau adapter avec 2 listeners
+        adapter = new ReportAdapter(
+                report -> {
+                    // TODO: ouvrir détails rapport
+                },
+                report -> {
+                    // Suppression par appui long
+                    viewModel.delete(report);
+                }
+        );
+
         binder.rvReports.setLayoutManager(new LinearLayoutManager(getContext()));
         binder.rvReports.setAdapter(adapter);
 
-        // Observer les rapports
         viewModel.getAllReports().observe(getViewLifecycleOwner(), reports -> {
-            adapter.setReports(reports);
+            adapter.setItems(reports);
         });
 
-        // Suppression par appui long gérée dans l'adapter
-        adapter.setLongClickListener(report -> {
-            viewModel.delete(report);
-        });
-
-        // Bouton ajout
         binder.fabAddReport.setOnClickListener(v -> {
             // TODO: ouvrir formulaire ajout rapport
         });

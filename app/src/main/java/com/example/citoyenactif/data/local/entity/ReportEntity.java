@@ -30,4 +30,5 @@ public class ReportEntity {
 
     @ColumnInfo(name = "created_at")
     public long createdAt;
+
 }

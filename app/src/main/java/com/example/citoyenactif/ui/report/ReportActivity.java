@@ -8,17 +8,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
 import com.example.citoyenactif.R;
-import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.data.repository.ReportRepository;
 import com.example.citoyenactif.databinding.ReportActivityBinding;
+import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportCategory;
-import com.example.citoyenactif.model.enums.ReportStatus;
 
 /**
  * Activité permettant d'ajouter un rapport de bris.
- *
  * Récupère les informations du formulaire, valide les champs,
- * puis enregistre le rapport dans Room.
+ * puis enregistre le rapport dans Room via ReportRepository.
  */
 public class ReportActivity extends AppCompatActivity {
 
@@ -37,7 +35,7 @@ public class ReportActivity extends AppCompatActivity {
 
     /**
      * Valide le formulaire puis enregistre le rapport dans Room
-     * dans un thread secondaire.
+     * dans un thread secondaire via le DTO et le Repository.
      */
     private void saveReport() {
 
@@ -54,40 +52,37 @@ public class ReportActivity extends AppCompatActivity {
             return;
         }
 
-        // Spinner : si tu as mis "Choisir une catégorie..." en premier
+        // Spinner : "Choisir une catégorie..." est à l'index 0
         int pos = binding.spCategory.getSelectedItemPosition();
         if (pos == 0) {
             Toast.makeText(this, "Veuillez choisir une catégorie", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // IMPORTANT : pour éviter les espaces/accents, on mappe l'index du spinner vers l'enum
-        // Exemple attendu : items du spinner dans le même ordre que l'enum (VOIRIE, ECLAIRAGE, PARC, AQUEDUC, AUTRE)
+        // Mappage index spinner → enum (ordre : VOIRIE, ECLAIRAGE, PARC, AQUEDUC, AUTRE)
         final ReportCategory category = ReportCategory.values()[pos - 1];
 
-        ReportEntity report = new ReportEntity();
-        report.title = title;
-        report.description = description;
-        report.category = category;
-        report.status = ReportStatus.EN_ATTENTE; // statut initial
+        // ✅ On passe par le DTO — jamais ReportEntity directement ici
+        ReportCreateDTO dto = new ReportCreateDTO();
+        dto.title       = title;
+        dto.description = description;
+        dto.category    = category;
+        dto.photoUri    = null;  // TODO : photo avec caméra
+        dto.latitude    = 0.0;  // TODO : GPS réel
+        dto.longitude   = 0.0;
+        dto.citizenId   = 0;    // TODO : récupérer via SessionManager
 
-        // Valeurs par défaut (tu remplaceras plus tard)
-        report.latitude = 0.0;
-        report.longitude = 0.0;
-        report.photoPath = null;
-
-        report.createdAt = System.currentTimeMillis();
-
-        // TODO : récupérer le vrai userId connecté (session)
-        report.createdByUserId = 0;
-
+        // ✅ Thread secondaire conservé
         new Thread(() -> {
             try {
-                ReportRepository repo = new ReportRepository(getApplicationContext());
-                long id = repo.addReport(report);
+                // ✅ getApplication() (Application), pas getApplicationContext() (Context)
+                ReportRepository repo = new ReportRepository(getApplication());
+
+                // ✅ insert(dto) — repo gère la conversion DTO → Entity
+                repo.insert(dto);
 
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Rapport enregistré (id=" + id + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Rapport enregistré !", Toast.LENGTH_SHORT).show();
                     finish();
                 });
 

@@ -1,6 +1,7 @@
 package com.example.citoyenactif.ui.report;
 
 import android.Manifest;
+import android.app.Application;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,13 +11,17 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 
 import com.example.citoyenactif.R;
+import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.data.repository.ReportRepository;
 import com.example.citoyenactif.databinding.ReportActivityBinding;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
@@ -26,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class ReportActivity extends AppCompatActivity {
@@ -148,5 +154,40 @@ public class ReportActivity extends AppCompatActivity {
                 );
             }
         }).start();
+    }
+
+    /** ViewModel liant l'UI citoyen au ReportRepository */
+    public static class ReportViewModel extends AndroidViewModel {
+
+        private final ReportRepository repo;
+        private LiveData<List<ReportEntity>> allReports;
+
+        public ReportViewModel(@NonNull Application application) {
+            super(application);
+            repo = new ReportRepository(application);
+        }
+
+        public LiveData<List<ReportEntity>> getAllReports() {
+            if (allReports == null) {
+                allReports = repo.getAllReports();
+            }
+            return allReports;
+        }
+
+        public LiveData<List<ReportEntity>> getReportsByCitizen(int citizenId) {
+            return repo.getReportsByCitizen(citizenId);
+        }
+
+        public void insert(ReportCreateDTO dto) {
+            repo.insert(dto);
+        }
+
+        public void delete(ReportEntity report) {
+            repo.delete(report);
+        }
+
+        public void updateStatus(int reportId, String status) {
+            repo.updateStatus(reportId, status);
+        }
     }
 }

@@ -32,5 +32,5 @@ public interface ReportDao {
     LiveData<List<ReportEntity>> getPendingReports();
 
     @Query("UPDATE reports SET status = :status WHERE id = :reportId")
-    void updateStatus(int reportId, String status);
+    void updateStatus(long reportId, String status);
 }

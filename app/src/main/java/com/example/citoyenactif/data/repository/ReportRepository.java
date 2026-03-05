@@ -59,7 +59,7 @@ public class ReportRepository {
         return reportDao.getPendingReports();
     }
 
-    public void updateStatus(int reportId, String status) {
+    public void updateStatus(long reportId, String status) {
         executor.execute(() -> reportDao.updateStatus(reportId, status));
     }
 }

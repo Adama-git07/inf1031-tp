@@ -13,14 +13,13 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.citoyenactif.databinding.RepportsListFragmentBinding;
-import com.example.citoyenactif.ui.citizen.ReportViewModel;
 import com.example.citoyenactif.ui.citizen.adapter.ReportAdapter;
 import com.example.citoyenactif.ui.report.ReportActivity;
 
 public class ReportsListFragment extends Fragment {
 
     private RepportsListFragmentBinding binder;
-    private ReportViewModel viewModel;
+    private ReportActivity.ReportViewModel viewModel;
     private ReportAdapter adapter;
 
     @Nullable
@@ -36,7 +35,7 @@ public class ReportsListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
+        viewModel = new ViewModelProvider(this).get(ReportActivity.ReportViewModel.class);
 
         adapter = new ReportAdapter(
                 report -> {

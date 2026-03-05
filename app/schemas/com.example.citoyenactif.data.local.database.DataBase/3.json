@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 3,
-    "identityHash": "bed5d60aecbd76191370d142d25c3643",
+    "identityHash": "a921f023ae06d9503eef0439f3d08ef0",
     "entities": [
       {
         "tableName": "users",
@@ -129,7 +129,7 @@
       },
       {
         "tableName": "reports",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `description` TEXT, `category` TEXT, `status` TEXT, `photo_uri` TEXT, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `citizen_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `description` TEXT, `category` TEXT, `status` TEXT, `photo_uri` TEXT, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `citizen_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `resolvedPhotoUri` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -190,6 +190,12 @@
             "columnName": "created_at",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "resolvedPhotoUri",
+            "columnName": "resolvedPhotoUri",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -205,7 +211,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bed5d60aecbd76191370d142d25c3643')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a921f023ae06d9503eef0439f3d08ef0')"
     ]
   }
 }

@@ -53,7 +53,7 @@ public class ReportsListFragment extends Fragment {
             adapter.setItems(reports);
         });
 
-        // ✅ FAB branché
+        //  FAB branché
         binder.fabAddReport.setOnClickListener(v -> {
             Intent intent = new Intent(requireContext(), ReportActivity.class);
             startActivity(intent);

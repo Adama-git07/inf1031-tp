@@ -33,4 +33,7 @@ public interface ReportDao {
 
     @Query("UPDATE reports SET status = :status WHERE id = :reportId")
     void updateStatus(long reportId, String status);
+
+    @Query("UPDATE reports SET status = :status, resolvedPhotoUri = :proofUri WHERE id = :reportId")
+    void resolveWithProof(long reportId, String status, String proofUri);
 }

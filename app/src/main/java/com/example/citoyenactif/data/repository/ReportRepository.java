@@ -62,4 +62,10 @@ public class ReportRepository {
     public void updateStatus(long reportId, String status) {
         executor.execute(() -> reportDao.updateStatus(reportId, status));
     }
+
+    public void resolveWithProof(long reportId, String proofUri) {
+        executor.execute(() ->
+                reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri)
+        );
+    }
 }

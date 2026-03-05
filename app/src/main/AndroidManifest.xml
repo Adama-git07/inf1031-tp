@@ -2,7 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ✅ Permission caméra -->
+    <!-- Permission caméra -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
@@ -38,7 +41,7 @@
             android:name=".ui.municipal.MunicipalPageActivity"
             android:theme="@style/Theme.CitoyenActif.NoActionBar" />
 
-        <!-- ✅ FileProvider pour la caméra -->
+        <!-- FileProvider pour la caméra -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -48,6 +51,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
 
     </application>
 

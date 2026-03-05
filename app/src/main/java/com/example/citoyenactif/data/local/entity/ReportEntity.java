@@ -31,4 +31,6 @@ public class ReportEntity {
     @ColumnInfo(name = "created_at")
     public long createdAt;
 
+    public String resolvedPhotoUri; // preuve prise par l’agent (camera)
+
 }

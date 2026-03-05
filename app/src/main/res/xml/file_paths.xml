@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <external-files-path name="photos" path="Pictures/" />
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pour les photos prises dans getExternalFilesDir(Environment.DIRECTORY_PICTURES) -->
+    <external-files-path name="pictures" path="Pictures/" />
+
+    <!-- Si tu utilises aussi getFilesDir()/images pour d’autres cas -->
+    <files-path name="images" path="images/" />
 </paths>

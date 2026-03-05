@@ -30,11 +30,11 @@ public class MunicipalPageActivity extends AppCompatActivity {
 
         binder = DataBindingUtil.setContentView(this, R.layout.municipal_page_activity);
 
-        // ✅ IMPORTANT : header au-dessus du container/fragments
+        //  IMPORTANT : header au-dessus du container/fragments
         binder.header.bringToFront();
         binder.header.invalidate();
 
-        // ✅ Test: si tu vois ce toast, le click arrive
+        // Test: si tu vois ce toast, le click arrive
         binder.btnLogoutMunicipal.setOnClickListener(v -> {
             Toast.makeText(this, "Logout click", Toast.LENGTH_SHORT).show();
             logout();

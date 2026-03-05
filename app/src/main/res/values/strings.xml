@@ -1,12 +1,9 @@
 <resources>
     <string name="app_name">Citoyen Actif</string>
-    <string name="intro_text">
-    <![CDATA[
-    <b>Bienvenue sur Citoyen Actif<br/>Ensemble, améliorons notre ville.</b><br/><br/>
-    Connectez-vous pour signaler un bris ou suivre vos rapports.
-    ]]>
-    </string>
-    <string name="citizen_page_welcome">Bienvenue sur Citoyen Actif\nConsultez vos rapports ou ajoutez-en un nouveau.</string>
+    <string name="intro_text">Bienvenue sur Citoyen Actif\nEnsemble, améliorons notre ville.\n
+        \nConnectez-vous pour signaler un bris ou suivre vos rapports.</string>
+    <string name="citizen_page_welcome">Bienvenue sur Citoyen Actif
+        \nConsultez vos rapports ou ajoutez-en un nouveau.</string>
     <string-array name="report_categories">
         <item>Choisir une catégorie...</item>
         <item>Voirie</item>

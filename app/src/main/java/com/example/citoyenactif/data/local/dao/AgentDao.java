@@ -29,4 +29,7 @@ public interface AgentDao {
 
     @Query("SELECT * FROM agents ORDER BY id DESC")
     List<AgentEntity> getAll();
+
+    @Query("SELECT * FROM agents WHERE id = :id LIMIT 1")
+    AgentEntity getById(long id);
 }

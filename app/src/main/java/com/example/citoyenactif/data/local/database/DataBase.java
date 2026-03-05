@@ -4,15 +4,15 @@ import androidx.room.Database;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
-import com.example.citoyenactif.data.local.converter.ReportCategoryConverter;
-import com.example.citoyenactif.data.local.converter.ReportStatusConverter;
 import com.example.citoyenactif.data.local.converter.UserRoleConverter;
 import com.example.citoyenactif.data.local.dao.AgentDao;
 import com.example.citoyenactif.data.local.dao.ReportDao;
 import com.example.citoyenactif.data.local.dao.UserDao;
 import com.example.citoyenactif.data.local.entity.AgentEntity;
-import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.data.local.entity.UserEntity;
+import com.example.citoyenactif.data.local.converter.ReportCategoryConverter;
+import com.example.citoyenactif.data.local.converter.ReportStatusConverter;
+import com.example.citoyenactif.data.local.entity.ReportEntity;
 
 
 /**
@@ -30,7 +30,7 @@ import com.example.citoyenactif.data.local.entity.UserEntity;
 @Database(entities = {UserEntity.class, AgentEntity.class, ReportEntity.class}, // Liste des tables de la base
         version = 3                    // Version de la base (à incrémenter en cas de modification)
 )
-@TypeConverters({UserRoleConverter.class, ReportCategoryConverter.class, ReportStatusConverter.class})  // Permet d'utiliser l'enum UserRole
+@TypeConverters({UserRoleConverter.class, ReportStatusConverter.class, ReportCategoryConverter.class})  // Permet d'utiliser l'enum UserRole
 public abstract class DataBase extends RoomDatabase {
 
     /**

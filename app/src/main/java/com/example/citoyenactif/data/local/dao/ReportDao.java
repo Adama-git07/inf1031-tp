@@ -1,41 +1,39 @@
 package com.example.citoyenactif.data.local.dao;
 
+import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
 import com.example.citoyenactif.data.local.entity.ReportEntity;
-import com.example.citoyenactif.model.enums.ReportStatus;
-
 import java.util.List;
 
 @Dao
 public interface ReportDao {
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    long insert(ReportEntity report);
+    @Insert
+    void insert(ReportEntity report);
 
     @Update
-    int update( ReportEntity report );
+    void update(ReportEntity report);
 
     @Delete
-    int delete(ReportEntity report );
+    void delete(ReportEntity report);
 
-    @Query("SELECT * FROM reports ORDER BY createdAt DESC")
-    List<ReportEntity> getAll();
+    @Query("SELECT * FROM reports WHERE citizen_id = :citizenId ORDER BY created_at DESC")
+    LiveData<List<ReportEntity>> getReportsByCitizen(int citizenId);
 
-    @Query("SELECT * FROM reports WHERE createdByUserId = :userId ORDER BY createdAt DESC")
-    List<ReportEntity> getByUser(long userId);
+    @Query("SELECT * FROM reports ORDER BY created_at DESC")
+    LiveData<List<ReportEntity>> getAllReports();
 
-    @Query("SELECT * FROM reports WHERE status = :status ORDER BY createdAt DESC")
-    List<ReportEntity> getByStatus(ReportStatus status);
-
-    @Query("SELECT * FROM reports WHERE id = :reportId LIMIT 1")
-    ReportEntity getById(long reportId);
+    @Query("SELECT * FROM reports WHERE status = 'EN_ATTENTE' ORDER BY created_at DESC")
+    LiveData<List<ReportEntity>> getPendingReports();
 
     @Query("UPDATE reports SET status = :status WHERE id = :reportId")
-    int updateStatus(long reportId, ReportStatus status);
+    void updateStatus(long reportId, String status);
+
+    @Query("UPDATE reports SET status = :status, resolvedPhotoUri = :proofUri WHERE id = :reportId")
+    void resolveWithProof(long reportId, String status, String proofUri);
 }

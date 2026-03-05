@@ -79,18 +79,18 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportVH> 
                   OnReportClickListener clickListener,
                   OnReportLongClickListener longClickListener) {
 
-            binding.tvItemTitle.setText(report.title);
+            binding.tvReportTitle.setText(report.title);
 
             if (report.category != null) {
-                binding.tvItemCategory.setText(report.category.name()); // enum
+                binding.tvReportMeta.setText(report.category.name()); // enum
             } else {
-                binding.tvItemCategory.setText("—");
+                binding.tvReportMeta.setText("—");
             }
 
             if (report.status != null) {
-                binding.tvItemStatus.setText(report.status.name()); // enum
+                binding.tvReportMeta.setText(report.status.name()); // enum
             } else {
-                binding.tvItemStatus.setText("—");
+                binding.tvReportMeta.setText("—");
             }
 
             binding.getRoot().setOnClickListener(v -> {

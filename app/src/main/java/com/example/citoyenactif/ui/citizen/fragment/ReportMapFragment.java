@@ -4,19 +4,23 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
-import com.example.citoyenactif.databinding.RepportsMapFragmentBinding;
 
 public class ReportMapFragment extends Fragment {
 
-    private RepportsMapFragmentBinding binder;
-
-    public View onCreateView (@NonNull LayoutInflater inflater, ViewGroup container, Bundle saveInstanceStace){
-        binder = RepportsMapFragmentBinding.inflate(inflater, container, false);
-        return binder.getRoot();
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container,
+                             Bundle savedInstanceState) {
+        TextView tv = new TextView(getContext());
+        tv.setText("Carte (à implémenter)");
+        tv.setTextSize(18f);
+        tv.setPadding(32, 32, 32, 32);
+        return tv;
     }
-
 }

@@ -1,96 +1,71 @@
 package com.example.citoyenactif.data.repository;
 
-import android.content.Context;
+import android.app.Application;
+import androidx.lifecycle.LiveData;
 
 import com.example.citoyenactif.data.local.dao.ReportDao;
 import com.example.citoyenactif.data.local.database.DatabaseClient;
 import com.example.citoyenactif.data.local.entity.ReportEntity;
+import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportStatus;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-/**
- * Repository responsable de la gestion des rapports.
- *
- * Il agit comme une couche intermédiaire entre :
- * - UI (Activities/Fragments)
- * - DAO (Room)
- *
- * L'objectif est d'isoler la logique d'accès aux données.
- */
+/** Repository responsable de la gestion des rapports de bris */
 public class ReportRepository {
 
     private final ReportDao reportDao;
+    private final ExecutorService executor;
 
-    /**
-     * Initialise le repository en récupérant le DAO via DatabaseClient.
-     *
-     * @param context contexte application
-     */
-    public ReportRepository(Context context) {
-        reportDao = DatabaseClient.getInstance(context).getDb().reportDao();
+    public ReportRepository(Application application) {
+        reportDao = DatabaseClient.getInstance(application).getDb().reportDao();
+        executor = Executors.newSingleThreadExecutor();
     }
 
-    /**
-     * Ajoute un rapport dans la base.
-     *
-     * @param report rapport à insérer
-     * @return id auto-généré du rapport inséré
-     */
-    public long addReport(ReportEntity report) {
-        return reportDao.insert(report);
+    /** Crée un nouveau rapport à partir du DTO */
+    public void insert(ReportCreateDTO dto) {
+        ReportEntity report = new ReportEntity();
+        report.title = dto.title;
+        report.description = dto.description;
+        report.category = dto.category;
+        report.status = ReportStatus.EN_ATTENTE;
+        report.photoUri = dto.photoUri;
+        report.latitude = dto.latitude;
+        report.longitude = dto.longitude;
+        report.citizenId = dto.citizenId;
+        report.createdAt = System.currentTimeMillis();
+        executor.execute(() -> reportDao.insert(report));
     }
 
-    /**
-     * Met à jour un rapport existant.
-     */
-    public int updateReport(ReportEntity report) {
-        return reportDao.update(report);
+    public void update(ReportEntity report) {
+        executor.execute(() -> reportDao.update(report));
     }
 
-    /**
-     * Supprime un rapport.
-     */
-    public int deleteReport(ReportEntity report) {
-        return reportDao.delete(report);
+    public void delete(ReportEntity report) {
+        executor.execute(() -> reportDao.delete(report));
     }
 
-    /**
-     * Retourne tous les rapports.
-     */
-    public List<ReportEntity> getAllReports() {
-        return reportDao.getAll();
+    public LiveData<List<ReportEntity>> getReportsByCitizen(int citizenId) {
+        return reportDao.getReportsByCitizen(citizenId);
     }
 
-    /**
-     * Retourne les rapports d'un citoyen.
-     *
-     * @param userId id du citoyen
-     */
-    public List<ReportEntity> getReportsByUser(long userId) {
-        return reportDao.getByUser(userId);
+    public LiveData<List<ReportEntity>> getAllReports() {
+        return reportDao.getAllReports();
     }
 
-    /**
-     * Retourne les rapports selon un statut.
-     *
-     * @param status statut recherché
-     */
-    public List<ReportEntity> getReportsByStatus(ReportStatus status) {
-        return reportDao.getByStatus(status);
+    public LiveData<List<ReportEntity>> getPendingReports() {
+        return reportDao.getPendingReports();
     }
 
-    /**
-     * Retourne un rapport par id.
-     */
-    public ReportEntity getReportById(long reportId) {
-        return reportDao.getById(reportId);
+    public void updateStatus(long reportId, String status) {
+        executor.execute(() -> reportDao.updateStatus(reportId, status));
     }
 
-    /**
-     * Met à jour uniquement le statut d'un rapport.
-     */
-    public int updateReportStatus(long reportId, ReportStatus status) {
-        return reportDao.updateStatus(reportId, status);
+    public void resolveWithProof(long reportId, String proofUri) {
+        executor.execute(() ->
+                reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri)
+        );
     }
 }

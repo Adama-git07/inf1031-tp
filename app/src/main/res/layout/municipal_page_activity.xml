@@ -7,23 +7,24 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/municipal_root"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@android:color/white">
 
-        <!-- Header -->
+        <!-- Top bar FIXE -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/header"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="110dp"
+            android:background="@android:color/white"
+            android:elevation="20dp"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:paddingTop="24dp"
-            android:paddingBottom="12dp"
-            android:background="@android:color/white"
-            android:elevation="12dp"
+            android:paddingBottom="14dp"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
 
+            <!-- Titre aligné bas-gauche  -->
             <TextView
                 android:id="@+id/tvMunicipalTitle"
                 android:layout_width="0dp"
@@ -33,9 +34,9 @@
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@id/btnLogoutMunicipal"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
+            <!-- Bouton aligné bas-droite -->
             <Button
                 android:id="@+id/btnLogoutMunicipal"
                 android:layout_width="wrap_content"
@@ -44,11 +45,10 @@
                 android:minWidth="120dp"
                 android:text="Déconnexion"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Conteneur fragments (entre header et bottom bar) -->
+        <!-- Conteneur fragments -->
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/municipal_fragment_container"
             android:layout_width="0dp"

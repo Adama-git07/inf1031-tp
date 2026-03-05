@@ -113,7 +113,7 @@ public class SignInFrag extends Fragment {
 
             requireActivity().runOnUiThread(() -> {
                 if (agent != null) {
-                    com.example.citoyenactif.util.SessionManager.saveAgent(requireContext());
+                    SessionManager.saveAgent(requireContext(), agent.id);
 
                     startActivity(new Intent(requireActivity(), MunicipalPageActivity.class));
                     requireActivity().finish();

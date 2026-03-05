@@ -16,4 +16,8 @@ public class AgentRepository {
     public AgentEntity login(String agentNumber, String password) {
         return agentDao.login(agentNumber, password);
     }
+
+    public AgentEntity getById(long id) {
+        return agentDao.getById(id);
+    }
 }

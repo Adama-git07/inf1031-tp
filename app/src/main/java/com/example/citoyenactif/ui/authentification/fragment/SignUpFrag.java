@@ -1,6 +1,7 @@
 package com.example.citoyenactif.ui.authentification.fragment;
 
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,90 +17,137 @@ import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
 import com.example.citoyenactif.databinding.SignUpFragBinding;
 
 /**
- * Fragment de création de compte (SignUp).
+ * Fragment de création de compte citoyen (SignUp).
  *
- * Ce fragment permet à un utilisateur
- * de créer un nouveau compte dans l'application.
+ * Utilise DataBinding two-way :
+ *   - Le layout sign_up_frag.xml déclare <variable name="dto" type="UserCreateDTO"/>
+ *   - Chaque EditText est lié @={dto.field} → saisie auto-écrite dans le DTO
+ *   - La validation lit dto.field.get() sans aucun getText()
  *
- * Il récupère les informations saisies,
- * puis appelle le Repository pour enregistrer
- * l'utilisateur dans la base de données Room.
+ * Validations effectuées avant l'inscription :
+ *   1. Nom et prénom non vides
+ *   2. Format email valide (Patterns.EMAIL_ADDRESS)
+ *   3. Téléphone : exactement 10 chiffres
+ *   4. Username non vide
+ *   5. Mot de passe ≥ 6 caractères
+ *   6. Confirmation identique au mot de passe
  */
 public class SignUpFrag extends Fragment {
 
-    /**
-     * Binding généré automatiquement pour accéder
-     * aux vues du layout sign_up_frag.xml.
-     */
     private SignUpFragBinding binder;
 
-    /**
-     * Création et initialisation de la vue du fragment.
-     */
+    /** DTO lié au layout via DataBinding — rempli automatiquement par la saisie */
+    private final UserCreateDTO dto = new UserCreateDTO();
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // Liaison entre le XML et le code Java
         binder = SignUpFragBinding.inflate(inflater, container, false);
 
-        /**
-         * Bouton Annuler :
-         * Retourne vers l'écran de connexion (SignIn).
-         */
+        // Liaison du DTO au layout — les champs @={dto.xxx} pointent vers ce DTO
+        binder.setDto(dto);
+        binder.setLifecycleOwner(getViewLifecycleOwner());
+
+        // Bouton Annuler
         binder.cancelButton.setOnClickListener(v ->
                 ((AuthentificationActivity) requireActivity()).goToSignIn()
         );
 
-        /**
-         * Bouton Confirmer :
-         * Lance le processus de création du compte.
-         */
-        binder.confirmButton.setOnClickListener(v -> {
+        // Bouton Confirmer → validation puis inscription
+        binder.confirmButton.setOnClickListener(v -> handleSignUp());
 
-            // Room ne peut pas être appelé sur le thread principal
-            new Thread(() -> {
-
-                try {
-                    // Création du repository
-                    UserRepository repo = new UserRepository(requireContext());
-
-                    // Création du DTO à partir des champs saisis
-                    UserCreateDTO dto = new UserCreateDTO();
-                    dto.username = binder.username.getText().toString().trim();
-                    dto.email = binder.email.getText().toString().trim();
-                    dto.password = binder.password.getText().toString().trim();
-
-                    // Attribution du rôle par défaut (CITIZEN)
-                    dto.role = UserRoles.valueOf(UserRoles.CITIZEN.name());
-
-                    // Enregistrement en base
-                    long id = repo.register(dto);
-
-                    // Retour au thread UI pour afficher un message
-                    requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(),
-                                "Compte créé avec succès !",
-                                Toast.LENGTH_SHORT).show();
-                        // Redirection vers la page de connexion
-                        ((AuthentificationActivity) requireActivity()).goToSignIn();
-                    });
-
-                } catch (Exception e) {
-
-                    // Gestion d'erreur (ex : username/email déjà utilisé)
-                    requireActivity().runOnUiThread(() ->
-                            Toast.makeText(getContext(),
-                                    "Erreur : username/email déjà utilisé",
-                                    Toast.LENGTH_SHORT).show()
-                    );
-                }
-
-            }).start();
-        });
-
-        // Retourne la vue racine du fragment
         return binder.getRoot();
+    }
+
+    /**
+     * Lit les champs du DTO (mis à jour automatiquement par DataBinding),
+     * valide les données, puis inscrit l'utilisateur en base.
+     */
+    private void handleSignUp() {
+
+        // ── Lecture des champs via ObservableField.get() ──────────────────────
+        String lastName     = get(dto.lastName);
+        String firstName    = get(dto.firstName);
+        String address      = get(dto.address);
+        String email        = get(dto.email);
+        String phone        = get(dto.phone);
+        String username     = get(dto.username);
+        String password     = get(dto.password);
+        String confirmPwd   = get(dto.confirmPassword);
+
+        // ── Validations ───────────────────────────────────────────────────────
+
+        if (lastName.isEmpty()) {
+            toast("Veuillez saisir votre nom"); return;
+        }
+        if (firstName.isEmpty()) {
+            toast("Veuillez saisir votre prénom"); return;
+        }
+        if (address.isEmpty()) {
+            toast("Veuillez saisir votre adresse"); return;
+        }
+
+        // Validation format courriel
+        if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            toast("Adresse courriel invalide"); return;
+        }
+
+        // Validation téléphone : exactement 10 chiffres
+        if (!phone.matches("[0-9]{10}")) {
+            toast("Numéro de téléphone invalide (10 chiffres requis)"); return;
+        }
+
+        if (username.isEmpty()) {
+            toast("Veuillez choisir un nom d'utilisateur"); return;
+        }
+
+        // Mot de passe minimum 6 caractères
+        if (password.length() < 6) {
+            toast("Le mot de passe doit contenir au moins 6 caractères"); return;
+        }
+
+        // Confirmation du mot de passe
+        if (!password.equals(confirmPwd)) {
+            toast("Les mots de passe ne correspondent pas"); return;
+        }
+
+        // ── Inscription en base (thread secondaire — Room interdit le thread principal) ──
+        dto.role = UserRoles.CITIZEN;
+
+        new Thread(() -> {
+            try {
+                UserRepository repo = new UserRepository(requireContext());
+                repo.register(dto);
+
+                requireActivity().runOnUiThread(() -> {
+                    toast("Compte créé avec succès !");
+                    ((AuthentificationActivity) requireActivity()).goToSignIn();
+                });
+
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
+                        toast("Erreur : nom d'utilisateur ou courriel déjà utilisé")
+                );
+            }
+        }).start();
+    }
+
+
+    /** Lit un ObservableField<String> en null-safe et retourne une chaîne trimmée. */
+    private String get(androidx.databinding.ObservableField<String> field) {
+        String v = field.get();
+        return v != null ? v.trim() : "";
+    }
+
+    private void toast(String msg) {
+        Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binder = null;
     }
 }

@@ -1,129 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- ============================================================
+         DATABINDING : variable dto lié two-way à chaque champ
+         Permet @={dto.username}, @={dto.email}, etc.
+         sans appels manuels à getText() dans le fragment.
+         ============================================================ -->
+    <data>
+        <variable
+            name="dto"
+            type="com.example.citoyenactif.model.dto.UserCreateDTO" />
+    </data>
+
+    <ScrollView
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp">
+        android:layout_height="match_parent">
 
-        <!-- Titre -->
-        <TextView
-            android:id="@+id/welcome_message"
-            android:layout_width="wrap_content"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="NOUVELLE CONNEXION"
-            android:textStyle="bold"
-            android:textSize="18dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:padding="16dp">
 
-        <!-- Bloc du formulaire -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/form_card"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="8dp"
-            app:layout_constraintTop_toBottomOf="@id/welcome_message"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <!-- Contenu interne -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <!-- Titre -->
+            <TextView
+                android:id="@+id/welcome_message"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:text="CRÉER UN COMPTE"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-                <!-- champ nom -->
-                <EditText
-                    android:id="@+id/name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Nom"/>
+            <!-- Formulaire -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/form_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="8dp"
+                app:layout_constraintTop_toBottomOf="@id/welcome_message"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
-                <!-- champ prenom -->
-                <EditText
-                    android:id="@+id/first_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Prenom"/>
-
-                <!-- champ adresse mail -->
-                <EditText
-                    android:id="@+id/email"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Adresse mail"/>
-
-                <!-- champ numero telephone -->
-                <EditText
-                    android:id="@+id/phone_number"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Numéro de téléphone"/>
-
-                <!-- champ nom utilisateur -->
-                <EditText
-                    android:id="@+id/username"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Nom d'utilisateur"/>
-
-                <!-- champ mot de passe -->
-                <EditText
-                    android:id="@+id/password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Mot de passe"
-                    android:inputType="textPassword"/>
-
-                <!-- champ cormation mot de passe -->
-                <EditText
-                    android:id="@+id/confirm_password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Confirmez le mot de passe"
-                    android:inputType="textPassword"/>
-
-                <!-- Boutons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <!-- button Annuler -->
-                    <Button
-                        android:id="@+id/cancel_button"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <!-- NOM — two-way binding @={dto.lastName} -->
+                    <EditText
+                        android:id="@+id/name"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="ANNULER"
-                        android:backgroundTint="#D32F2F"/>
+                        android:hint="Nom"
+                        android:inputType="textPersonName"
+                        android:text="@={dto.lastName}" />
 
-                    <!-- espace entre les buttons -->
-                    <Space
-                        android:layout_width="16dp"
-                        android:layout_height="wrap_content"/>
-
-                    <!-- button confirmer -->
-                    <Button
-                        android:id="@+id/confirm_button"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <!-- PRÉNOM -->
+                    <EditText
+                        android:id="@+id/first_name"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="CONFIRMER"
-                        android:backgroundTint="#1976D2"/>
+                        android:hint="Prénom"
+                        android:inputType="textPersonName"
+                        android:text="@={dto.firstName}" />
+
+                    <!-- ADRESSE -->
+                    <EditText
+                        android:id="@+id/address"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Adresse"
+                        android:inputType="textPostalAddress"
+                        android:text="@={dto.address}" />
+
+                    <!-- COURRIEL -->
+                    <EditText
+                        android:id="@+id/email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Adresse courriel"
+                        android:inputType="textEmailAddress"
+                        android:text="@={dto.email}" />
+
+                    <!-- TÉLÉPHONE -->
+                    <EditText
+                        android:id="@+id/phone_number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Numéro de téléphone (10 chiffres)"
+                        android:inputType="phone"
+                        android:text="@={dto.phone}" />
+
+                    <!-- NOM D'UTILISATEUR -->
+                    <EditText
+                        android:id="@+id/username"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Nom d'utilisateur"
+                        android:inputType="text"
+                        android:text="@={dto.username}" />
+
+                    <!-- MOT DE PASSE -->
+                    <EditText
+                        android:id="@+id/password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Mot de passe (min 6 caractères)"
+                        android:inputType="textPassword"
+                        android:text="@={dto.password}" />
+
+                    <!-- CONFIRMATION MOT DE PASSE -->
+                    <EditText
+                        android:id="@+id/confirm_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Confirmez le mot de passe"
+                        android:inputType="textPassword"
+                        android:text="@={dto.confirmPassword}" />
+
+                    <!-- Boutons -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp">
+
+                        <Button
+                            android:id="@+id/cancel_button"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="ANNULER"
+                            android:backgroundTint="#D32F2F" />
+
+                        <Space
+                            android:layout_width="16dp"
+                            android:layout_height="wrap_content" />
+
+                        <Button
+                            android:id="@+id/confirm_button"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="CONFIRMER"
+                            android:backgroundTint="#1976D2" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-        </com.google.android.material.card.MaterialCardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </layout>

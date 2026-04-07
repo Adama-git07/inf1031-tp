@@ -8,10 +8,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.example.citoyenactif.data.repository.UserRepository;
 import com.example.citoyenactif.databinding.ResetPasswordFragBinding;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
+import com.example.citoyenactif.ui.viewmodel.AuthViewModel;
 
 /**
  * Fragment permettant de réinitialiser le mot de passe d'un utilisateur.
@@ -21,92 +22,75 @@ import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
  * - un nouveau mot de passe
  * - confirmer ce mot de passe
  *
- * Le système vérifie que les deux mots de passe sont identiques
- * avant de mettre à jour la base de données via Room.
+ * Architecture MVVM :
+ *   - AuthViewModel gère la mise à jour Room en arrière-plan.
+ *   - Le Fragment observe le résultat et navigue / affiche un Toast.
+ *   - Aucun accès direct au repository ni création de Thread dans le Fragment.
  */
 public class ResetPasswordFrag extends Fragment {
 
     /** Binding permettant d'accéder aux vues du layout */
     private ResetPasswordFragBinding binder;
 
+    /** ViewModel partagé pour toutes les opérations d'authentification */
+    private AuthViewModel viewModel;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // Initialisation du binding
         binder = ResetPasswordFragBinding.inflate(inflater, container, false);
 
-        /**
-         * Bouton Annuler
-         * Retourne au fragment de connexion
-         */
+        // Obtenir le ViewModel
+        viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+
+        // Bouton Annuler
         binder.cancelButton.setOnClickListener(v ->
                 ((AuthentificationActivity) requireActivity()).goToSignIn()
         );
 
-        /**
-         * Bouton Confirmer
-         * Lance la procédure de réinitialisation du mot de passe
-         */
+        // Bouton Confirmer
         binder.confirmButton.setOnClickListener(v -> resetPassword());
+
+        // ── Observation du résultat ────────────────────────────────────────────
+        viewModel.getResetPasswordResult().observe(getViewLifecycleOwner(), success -> {
+            if (Boolean.TRUE.equals(success)) {
+                Toast.makeText(getContext(), "Mot de passe modifié avec succès", Toast.LENGTH_SHORT).show();
+                ((AuthentificationActivity) requireActivity()).goToSignIn();
+            } else if (success != null) {
+                Toast.makeText(getContext(), "Utilisateur introuvable", Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return binder.getRoot();
     }
 
     /**
-     * Vérifie les champs et met à jour le mot de passe dans Room.
+     * Vérifie les champs et délègue la réinitialisation au ViewModel.
      */
     private void resetPassword() {
-
-        // Récupération des champs
-        String username = binder.username.getText().toString().trim();
-        String password = binder.password.getText().toString().trim();
+        String username        = binder.username.getText().toString().trim();
+        String password        = binder.password.getText().toString().trim();
         String confirmPassword = binder.confirmPassword.getText().toString().trim();
 
-        // Vérification que les champs ne sont pas vides
         if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-            Toast.makeText(getContext(),
-                    "Veuillez remplir tous les champs",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Veuillez remplir tous les champs", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Vérification que les mots de passe sont identiques
         if (!password.equals(confirmPassword)) {
-            Toast.makeText(getContext(),
-                    "Les mots de passe ne correspondent pas",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Les mots de passe ne correspondent pas", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Room ne doit pas être appelé sur le thread principal
-        new Thread(() -> {
+        // Délégation au ViewModel — aucun Thread ici
+        viewModel.resetPassword(username, password);
+    }
 
-            UserRepository repo = new UserRepository(requireContext());
-
-            boolean success = repo.resetPasswordByUsername(username, password);
-
-            requireActivity().runOnUiThread(() -> {
-
-                if (success) {
-
-                    Toast.makeText(getContext(),
-                            "Mot de passe modifié avec succès",
-                            Toast.LENGTH_SHORT).show();
-
-                    // Retour à la page de connexion
-                    ((AuthentificationActivity) requireActivity()).goToSignIn();
-
-                } else {
-
-                    Toast.makeText(getContext(),
-                            "Utilisateur introuvable",
-                            Toast.LENGTH_SHORT).show();
-                }
-
-            });
-
-        }).start();
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binder = null;
     }
 }

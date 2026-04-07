@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.example.citoyenactif.databinding.RepportsListFragmentBinding;
 import com.example.citoyenactif.ui.citizen.adapter.ReportAdapter;
 import com.example.citoyenactif.ui.report.ReportActivity;
+import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
 
 /**
  * Fragment affichant la liste des rapports du citoyen connecté.
@@ -27,7 +28,7 @@ import com.example.citoyenactif.ui.report.ReportActivity;
 public class ReportsListFragment extends Fragment {
 
     private RepportsListFragmentBinding binder;
-    private ReportActivity.ReportViewModel viewModel;
+    private ReportViewModel viewModel;
     private ReportAdapter adapter;
 
     @Nullable
@@ -43,7 +44,7 @@ public class ReportsListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        viewModel = new ViewModelProvider(this).get(ReportActivity.ReportViewModel.class);
+        viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
 
         adapter = new ReportAdapter(
 

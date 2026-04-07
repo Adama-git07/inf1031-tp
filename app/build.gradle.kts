@@ -53,5 +53,11 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.room.runtime)
+    implementation(libs.play.services.maps)
     annotationProcessor(libs.room.compiler)
+
+    // ViewModel + LiveData (architecture MVVM)
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-livedata:2.8.7")
+    implementation("androidx.fragment:fragment:1.8.5")
 }

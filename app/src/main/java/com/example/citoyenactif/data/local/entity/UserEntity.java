@@ -7,16 +7,13 @@ import androidx.room.PrimaryKey;
 import com.example.citoyenactif.model.enums.UserRoles;
 
 /**
- * Entité Room représentant la table "users"
- * dans la base de données locale.
+ * Entité Room représentant la table "users".
  *
- * Cette classe définit la structure des colonnes
- * et les contraintes associées.
+ * Version 4 : ajout des champs firstName, lastName, phone, address
+ * conformément aux exigences du sujet (nom, prénom, adresse, courriel, téléphone).
  */
 @Entity(
         tableName = "users",
-
-        // Déclaration d'index uniques pour éviter les doublons
         indices = {
                 @Index(value = {"username"}, unique = true),
                 @Index(value = {"email"}, unique = true)
@@ -24,43 +21,33 @@ import com.example.citoyenactif.model.enums.UserRoles;
 )
 public class UserEntity {
 
-    /**
-     * Clé primaire auto-générée.
-     * Chaque utilisateur possède un identifiant unique.
-     */
     @PrimaryKey(autoGenerate = true)
     public long id;
 
-    /**
-     * Nom d'utilisateur unique.
-     * Contrainte d'unicité définie via @Index.
-     */
-    public String username;
+    /** Nom de famille */
+    public String lastName;
 
-    /**
-     * Adresse email unique.
-     * Contrainte d'unicité définie via @Index.
-     */
+    /** Prénom */
+    public String firstName;
+
+    /** Adresse postale */
+    public String address;
+
+    /** Adresse email unique */
     public String email;
 
-    /**
-     * Mot de passe de l'utilisateur
-     */
-    public String password; //si possible on va utiliser un HashMap pour eviter de stocker le mot de passe en clair
+    /** Numéro de téléphone */
+    public String phone;
 
-    /**
-     * Rôle de l'utilisateur dans l'application.
-     * Enum (CITIZEN, EMPLOYEE, etc.).
-     *
-     * Utilise un TypeConverter pour être stocké
-     * sous forme de String dans la base Room.
-     */
+    /** Nom d'utilisateur unique */
+    public String username;
+
+    /** Mot de passe (stocké en clair — à hasher en phase 2) */
+    public String password;
+
+    /** Rôle de l'utilisateur (CITIZEN, AGENT) */
     public UserRoles role;
 
-    /**
-     * Date de création du compte.
-     * Stockée sous forme de timestamp (millisecondes).
-     */
+    /** Timestamp de création du compte (ms) */
     public long createdAt;
-
 }

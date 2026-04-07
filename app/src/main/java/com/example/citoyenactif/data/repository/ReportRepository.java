@@ -17,138 +17,91 @@ import java.util.concurrent.Executors;
 /**
  * Repository responsable de la gestion des rapports de bris.
  *
- * Rôle :
- * - Servir de couche intermédiaire entre l'UI (Fragments/Activities) et la base de données Room (DAO).
- * - Encapsuler la logique d'accès aux données (insert/update/delete/queries).
- * - Exécuter les opérations d'écriture (insert/update/delete) dans un thread secondaire.
- *
- * Avantage :
- * - L'UI n'appelle jamais directement le DAO => séparation des responsabilités (architecture propre).
+ * Sert d'intermédiaire entre l'UI et Room.
+ * Toutes les opérations d'écriture sont exécutées en arrière-plan via l'executor.
  */
 public class ReportRepository {
 
-    /** DAO Room pour accéder à la table "reports" */
     private final ReportDao reportDao;
-
-    /**
-     * Executor (thread unique) utilisé pour exécuter les opérations d'écriture
-     * (Room interdit les accès DB sur le thread principal).
-     */
     private final ExecutorService executor;
 
-    /**
-     * Constructeur :
-     * - Récupère l'instance unique de la base Room via DatabaseClient
-     * - Récupère le ReportDao
-     * - Initialise l'executor (un seul thread en file d'attente)
-     *
-     * @param application contexte Application (plus sûr qu'un contexte Activity)
-     */
     public ReportRepository(Application application) {
         reportDao = DatabaseClient.getInstance(application).getDb().reportDao();
-        executor = Executors.newSingleThreadExecutor();
+        executor  = Executors.newSingleThreadExecutor();
     }
 
     /**
-     * Crée un nouveau rapport à partir d'un DTO (données saisies dans l'UI).
+     * Insère un nouveau rapport en base.
      *
-     * Étapes :
-     * - Convertit le ReportCreateDTO (UI) en ReportEntity (Room)
-     * - Force le statut EN_ATTENTE à la création (bonne pratique)
-     * - Fixe createdAt avec l'heure actuelle
-     * - Insère en base dans un thread secondaire
-     *
-     * @param dto données du formulaire de création report
+     * Les champs title/description viennent d'ObservableField (→ .get()).
+     * Les photos sont jointes en une chaîne "uri1|uri2|uri3".
      */
     public void insert(ReportCreateDTO dto) {
 
-        // Transformation DTO -> Entity
         ReportEntity report = new ReportEntity();
-        report.title = dto.title;
-        report.description = dto.description;
-        report.category = dto.category;
 
-        // Statut forcé à EN_ATTENTE à la création (même si dto.status existe)
-        report.status = ReportStatus.EN_ATTENTE;
+        report.title       = dto.title.get()       != null ? dto.title.get().trim()       : "";
+        report.description = dto.description.get() != null ? dto.description.get().trim() : "";
+        report.category    = dto.category;
+        report.status      = ReportStatus.EN_ATTENTE;   // statut forcé à la création
 
-        report.photoUri = dto.photoUri;
-        report.latitude = dto.latitude;
-        report.longitude = dto.longitude;
-        report.citizenId = dto.citizenId;
+        // Plusieurs photos stockées comme "uri1|uri2|..." dans la colonne photo_uri
+        if (dto.photoUris != null && !dto.photoUris.isEmpty()) {
+            report.photoUri = String.join("|", dto.photoUris);
+        } else {
+            report.photoUri = null;
+        }
 
-        // Date de création (timestamp en millisecondes)
-        report.createdAt = System.currentTimeMillis();
+        report.latitude   = dto.latitude;
+        report.longitude  = dto.longitude;
+        report.citizenId  = dto.citizenId;
+        report.createdAt  = System.currentTimeMillis();
 
-        // Insertion Room en background
         executor.execute(() -> reportDao.insert(report));
     }
 
-    /**
-     * Met à jour un rapport existant.
-     * Exécuté en arrière-plan.
-     */
+    /** Met à jour un rapport existant (utilisé pour l'édition). */
     public void update(ReportEntity report) {
         executor.execute(() -> reportDao.update(report));
     }
 
-    /**
-     * Supprime un rapport.
-     * Exécuté en arrière-plan.
-     */
+    /** Supprime un rapport. */
     public void delete(ReportEntity report) {
         executor.execute(() -> reportDao.delete(report));
     }
 
-    /**
-     * Retourne (en LiveData) la liste des rapports créés par un citoyen.
-     * LiveData : l'UI observe et se met à jour automatiquement.
-     *
-     * @param citizenId id du citoyen
-     */
+    /** Retourne tous les rapports d'un citoyen (LiveData). */
     public LiveData<List<ReportEntity>> getReportsByCitizen(int citizenId) {
         return reportDao.getReportsByCitizen(citizenId);
     }
 
-    /**
-     * Retourne (en LiveData) la liste de tous les rapports.
-     * Utile pour la vue municipale (agent).
-     */
+    /** Retourne tous les rapports (LiveData) — vue agent. */
     public LiveData<List<ReportEntity>> getAllReports() {
         return reportDao.getAllReports();
     }
 
-    /**
-     * Retourne (en LiveData) seulement les rapports en attente (EN_ATTENTE).
-     * Utile pour prioriser les traitements.
-     */
+    /** Retourne les rapports en attente (LiveData). */
     public LiveData<List<ReportEntity>> getPendingReports() {
         return reportDao.getPendingReports();
     }
 
-    /**
-     * Met à jour uniquement le statut d'un rapport (ex: EN_COURS, IGNORE, etc.).
-     * Exécuté en arrière-plan.
-     *
-     * @param reportId id du rapport
-     * @param status nouveau statut (String, ex: "EN_COURS")
-     */
+    /** Met à jour le statut d'un rapport. */
     public void updateStatus(long reportId, String status) {
         executor.execute(() -> reportDao.updateStatus(reportId, status));
     }
 
-    /**
-     * Marque un rapport comme RESOLU avec une preuve (URI photo prise par l'agent).
-     *
-     * - Force le statut à RESOLU (ReportStatus.RESOLU.name())
-     * - Enregistre l'URI de preuve dans la colonne resolvedPhotoUri
-     * - Exécuté en arrière-plan
-     *
-     * @param reportId id du rapport
-     * @param proofUri URI (String) de la photo de preuve
-     */
+    /** Marque un rapport comme résolu avec preuve photo. */
     public void resolveWithProof(long reportId, String proofUri) {
         executor.execute(() ->
                 reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri)
         );
+    }
+
+    /**
+     * Retourne un rapport par son ID (LiveData).
+     * Utilisé pour charger un rapport existant dans ReportActivity (mode VIEW/EDIT).
+     */
+    public LiveData<ReportEntity> getById(int id) {
+        return reportDao.getById(id);
     }
 }

@@ -28,7 +28,7 @@ import com.example.citoyenactif.data.local.entity.ReportEntity;
  * de générer automatiquement son implémentation interne.
  */
 @Database(entities = {UserEntity.class, AgentEntity.class, ReportEntity.class}, // Liste des tables de la base
-        version = 3                    // Version de la base (à incrémenter en cas de modification)
+        version = 4                    // v4 : ajout firstName, lastName, phone, address dans users
 )
 @TypeConverters({UserRoleConverter.class, ReportStatusConverter.class, ReportCategoryConverter.class})  // Permet d'utiliser l'enum UserRole
 public abstract class DataBase extends RoomDatabase {

@@ -98,6 +98,18 @@ public class DatabaseClient {
         }
     };
 
+    // MIGRATION 3 -> 4 : ajout des colonnes firstName, lastName, phone, address dans users
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            // SQLite ne supporte pas ALTER TABLE ... ADD MULTIPLE COLUMNS en une commande
+            database.execSQL("ALTER TABLE users ADD COLUMN lastName TEXT");
+            database.execSQL("ALTER TABLE users ADD COLUMN firstName TEXT");
+            database.execSQL("ALTER TABLE users ADD COLUMN address TEXT");
+            database.execSQL("ALTER TABLE users ADD COLUMN phone TEXT");
+        }
+    };
+
     /**
      * Constructeur privé :
      * - Empêche la création hors Singleton
@@ -113,7 +125,7 @@ public class DatabaseClient {
                         "citoyen_actif_db"
                 )
                 // Ajout des migrations pour éviter la suppression de la BD lors d'un changement de version
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
 
                 // Callback appelé uniquement lors de la première création de la BD (fresh install)
                 .addCallback(new RoomDatabase.Callback() {

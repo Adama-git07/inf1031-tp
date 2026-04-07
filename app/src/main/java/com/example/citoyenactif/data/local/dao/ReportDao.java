@@ -17,12 +17,6 @@ import java.util.List;
  * Rôle :
  * - Définir toutes les opérations SQL autorisées sur les rapports :
  *   insertion, mise à jour, suppression, et requêtes de lecture.
- *
- * Remarques importantes :
- * - Les méthodes qui retournent LiveData permettent une mise à jour automatique de l'UI :
- *   dès qu'une ligne change dans la table, l'observer (fragment/activité) est notifié.
- * - Les colonnes utilisées dans les requêtes (citizen_id, created_at) doivent correspondre
- *   exactement aux @ColumnInfo de ReportEntity.
  */
 @Dao
 public interface ReportDao {
@@ -104,4 +98,14 @@ public interface ReportDao {
      */
     @Query("UPDATE reports SET status = :status, resolvedPhotoUri = :proofUri WHERE id = :reportId")
     void resolveWithProof(long reportId, String status, String proofUri);
+
+    /**
+     * Retourne un rapport par son ID (LiveData pour observer les mises à jour).
+     * Utilisé pour le mode visualisation/édition dans ReportActivity.
+     *
+     * @param id identifiant du rapport
+     * @return LiveData<ReportEntity>
+     */
+    @Query("SELECT * FROM reports WHERE id = :id LIMIT 1")
+    LiveData<ReportEntity> getById(int id);
 }

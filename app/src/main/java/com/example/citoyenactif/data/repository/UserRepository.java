@@ -8,32 +8,16 @@ import com.example.citoyenactif.data.local.entity.UserEntity;
 import com.example.citoyenactif.model.dto.UserCreateDTO;
 import com.example.citoyenactif.model.enums.UserRoles;
 
-
 /**
  * Repository responsable de la gestion des utilisateurs.
  *
- * Cette classe sert d'intermédiaire entre :
- * - La couche UI (Fragments / Activities)
- * - La couche Data (Room / DAO)
- *
- * Elle permet d'isoler la logique d'accès aux données.
+ * Intermédiaire entre la couche UI et la base de données Room.
  */
 public class UserRepository {
 
-    /**
-     * DAO permettant d'exécuter les opérations
-     * sur la table "users".
-     */
     private final UserDao userDao;
 
-    /**
-     * Constructeur du Repository.
-     *
-     * Initialise l'accès à la base de données via le DatabaseClient.
-     *
-     * @param context contexte de l'application
-     */
-    public UserRepository(Context context){
+    public UserRepository(Context context) {
         userDao = DatabaseClient
                 .getInstance(context)
                 .getDb()
@@ -41,55 +25,53 @@ public class UserRepository {
     }
 
     /**
-     * Enregistre un nouvel utilisateur dans la base de données.
+     * Enregistre un nouvel utilisateur.
+     * Lit les ObservableField du DTO via .get().
      *
-     * Convertit le DTO (données UI) en UserEntity (modèle Room).
-     *
-     * @param dto données saisies lors de la création de compte
-     * @return id de l'utilisateur inséré
+     * @param dto données du formulaire d'inscription
+     * @return id du nouvel utilisateur inséré
      */
-    public long register(UserCreateDTO dto){
+    public long register(UserCreateDTO dto) {
 
-        // Création d'une nouvelle entité utilisateur
         UserEntity user = new UserEntity();
-        user.username = dto.username;
-        user.email = dto.email;
-        user.password = dto.password;
 
-        // Gestion du rôle via l'énumération
-        if (dto.role == null){
-            user.role = UserRoles.CITIZEN;      // Rôle par défaut
-        } else {
-            user.role = UserRoles.valueOf(String.valueOf(dto.role));
-        }
-        user.createdAt = System.currentTimeMillis();    // Date de création (timestamp actuel)
+        // Lecture des ObservableField (null-safe)
+        user.lastName  = dto.lastName.get()  != null ? dto.lastName.get().trim()  : "";
+        user.firstName = dto.firstName.get() != null ? dto.firstName.get().trim() : "";
+        user.address   = dto.address.get()   != null ? dto.address.get().trim()   : "";
+        user.email     = dto.email.get()     != null ? dto.email.get().trim()     : "";
+        user.phone     = dto.phone.get()     != null ? dto.phone.get().trim()     : "";
+        user.username  = dto.username.get()  != null ? dto.username.get().trim()  : "";
+        user.password  = dto.password.get()  != null ? dto.password.get().trim()  : "";
 
-        return userDao.insert(user);        // Insertion en base via Room
+        user.role      = (dto.role != null) ? dto.role : UserRoles.CITIZEN;
+        user.createdAt = System.currentTimeMillis();
+
+        return userDao.insert(user);
     }
 
     /**
-     * Vérifie les identifiants d'un utilisateur.
+     * Vérifie les identifiants de connexion.
      *
-     * @param login peut être username ou email
+     * @param login    username ou email
      * @param password mot de passe
-     * @return UserEntity si les identifiants sont valides, sinon null
+     * @return UserEntity si valide, null sinon
      */
-    public UserEntity login(String login, String password){
-        return userDao.login(login,password);
+    public UserEntity login(String login, String password) {
+        return userDao.login(login, password);
     }
 
     /**
-     * Réinitialise le mot de passe d'un utilisateur à partir de son username.
-     *
-     * @param username nom d'utilisateur
-     * @param newPassword nouveau mot de passe
-     * @return true si la mise à jour a réussi (utilisateur trouvé), sinon false
+     * Réinitialise le mot de passe par username.
      */
     public boolean resetPasswordByUsername(String username, String newPassword) {
         int rows = userDao.updatePasswordByUsername(username, newPassword);
         return rows > 0;
     }
 
+    /**
+     * Récupère un utilisateur par son ID.
+     */
     public UserEntity getById(long id) {
         return userDao.getById(id);
     }

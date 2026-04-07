@@ -1,16 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data></data>
 
+    <!--
+        On utilise un FrameLayout comme conteneur pour y insérer
+        dynamiquement un SupportMapFragment (Google Maps) depuis le code Java.
+        Cette approche est compatible avec DataBinding.
+    -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
+        <!-- Conteneur de la carte Google Maps (rempli par getChildFragmentManager) -->
+        <FrameLayout
+            android:id="@+id/mapContainer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="Carte (à implémenter)"
-            android:gravity="center" />
+            android:layout_height="match_parent" />
+
+        <!-- Bouton flottant : ajouter un rapport depuis la carte -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabAddReport"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:src="@android:drawable/ic_input_add"
+            android:contentDescription="Ajouter un rapport"
+            app:backgroundTint="#1976D2" />
+
     </FrameLayout>
 </layout>

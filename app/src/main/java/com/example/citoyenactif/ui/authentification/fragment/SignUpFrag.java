@@ -9,12 +9,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.example.citoyenactif.data.repository.UserRepository;
+import com.example.citoyenactif.databinding.SignUpFragBinding;
 import com.example.citoyenactif.model.dto.UserCreateDTO;
 import com.example.citoyenactif.model.enums.UserRoles;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
-import com.example.citoyenactif.databinding.SignUpFragBinding;
+import com.example.citoyenactif.ui.viewmodel.AuthViewModel;
 
 /**
  * Fragment de création de compte citoyen (SignUp).
@@ -23,6 +24,11 @@ import com.example.citoyenactif.databinding.SignUpFragBinding;
  *   - Le layout sign_up_frag.xml déclare <variable name="dto" type="UserCreateDTO"/>
  *   - Chaque EditText est lié @={dto.field} → saisie auto-écrite dans le DTO
  *   - La validation lit dto.field.get() sans aucun getText()
+ *
+ * Architecture MVVM :
+ *   - AuthViewModel gère l'inscription en arrière-plan.
+ *   - Le Fragment observe le résultat et affiche un Toast / navigue.
+ *   - Aucun accès direct au repository ni création de Thread dans le Fragment.
  *
  * Validations effectuées avant l'inscription :
  *   1. Nom et prénom non vides
@@ -39,6 +45,9 @@ public class SignUpFrag extends Fragment {
     /** DTO lié au layout via DataBinding — rempli automatiquement par la saisie */
     private final UserCreateDTO dto = new UserCreateDTO();
 
+    /** ViewModel partagé pour toutes les opérations d'authentification */
+    private AuthViewModel viewModel;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
@@ -46,9 +55,12 @@ public class SignUpFrag extends Fragment {
 
         binder = SignUpFragBinding.inflate(inflater, container, false);
 
-        // Liaison du DTO au layout — les champs @={dto.xxx} pointent vers ce DTO
+        // Liaison du DTO au layout
         binder.setDto(dto);
         binder.setLifecycleOwner(getViewLifecycleOwner());
+
+        // Obtenir le ViewModel
+        viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
         // Bouton Annuler
         binder.cancelButton.setOnClickListener(v ->
@@ -58,24 +70,42 @@ public class SignUpFrag extends Fragment {
         // Bouton Confirmer → validation puis inscription
         binder.confirmButton.setOnClickListener(v -> handleSignUp());
 
+        // ── Observation des résultats ──────────────────────────────────────────
+
+        // Résultat de l'inscription
+        viewModel.getRegisterResult().observe(getViewLifecycleOwner(), success -> {
+            if (Boolean.TRUE.equals(success)) {
+                toast("Compte créé avec succès !");
+                ((AuthentificationActivity) requireActivity()).goToSignIn();
+            }
+            // Le cas false est géré par errorMessage
+        });
+
+        // Message d'erreur (ex. doublon email/username)
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), msg -> {
+            if (msg != null && !msg.isEmpty()) {
+                toast(msg);
+            }
+        });
+
         return binder.getRoot();
     }
 
     /**
      * Lit les champs du DTO (mis à jour automatiquement par DataBinding),
-     * valide les données, puis inscrit l'utilisateur en base.
+     * valide les données, puis délègue l'inscription au ViewModel.
      */
     private void handleSignUp() {
 
         // ── Lecture des champs via ObservableField.get() ──────────────────────
-        String lastName     = get(dto.lastName);
-        String firstName    = get(dto.firstName);
-        String address      = get(dto.address);
-        String email        = get(dto.email);
-        String phone        = get(dto.phone);
-        String username     = get(dto.username);
-        String password     = get(dto.password);
-        String confirmPwd   = get(dto.confirmPassword);
+        String lastName   = get(dto.lastName);
+        String firstName  = get(dto.firstName);
+        String address    = get(dto.address);
+        String email      = get(dto.email);
+        String phone      = get(dto.phone);
+        String username   = get(dto.username);
+        String password   = get(dto.password);
+        String confirmPwd = get(dto.confirmPassword);
 
         // ── Validations ───────────────────────────────────────────────────────
 
@@ -88,52 +118,26 @@ public class SignUpFrag extends Fragment {
         if (address.isEmpty()) {
             toast("Veuillez saisir votre adresse"); return;
         }
-
-        // Validation format courriel
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             toast("Adresse courriel invalide"); return;
         }
-
-        // Validation téléphone : exactement 10 chiffres
         if (!phone.matches("[0-9]{10}")) {
             toast("Numéro de téléphone invalide (10 chiffres requis)"); return;
         }
-
         if (username.isEmpty()) {
             toast("Veuillez choisir un nom d'utilisateur"); return;
         }
-
-        // Mot de passe minimum 6 caractères
         if (password.length() < 6) {
             toast("Le mot de passe doit contenir au moins 6 caractères"); return;
         }
-
-        // Confirmation du mot de passe
         if (!password.equals(confirmPwd)) {
             toast("Les mots de passe ne correspondent pas"); return;
         }
 
-        // ── Inscription en base (thread secondaire — Room interdit le thread principal) ──
+        // ── Inscription via le ViewModel ──────────────────────────────────────
         dto.role = UserRoles.CITIZEN;
-
-        new Thread(() -> {
-            try {
-                UserRepository repo = new UserRepository(requireContext());
-                repo.register(dto);
-
-                requireActivity().runOnUiThread(() -> {
-                    toast("Compte créé avec succès !");
-                    ((AuthentificationActivity) requireActivity()).goToSignIn();
-                });
-
-            } catch (Exception e) {
-                requireActivity().runOnUiThread(() ->
-                        toast("Erreur : nom d'utilisateur ou courriel déjà utilisé")
-                );
-            }
-        }).start();
+        viewModel.register(dto);
     }
-
 
     /** Lit un ObservableField<String> en null-safe et retourne une chaîne trimmée. */
     private String get(androidx.databinding.ObservableField<String> field) {

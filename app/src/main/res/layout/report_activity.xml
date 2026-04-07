@@ -2,143 +2,176 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data></data>
+    <!-- ============================================================
+         DATABINDING : variable dto lié two-way aux champs texte
+         @={dto.title}       → saisie auto-écrite dans le DTO
+         @={dto.description} → saisie auto-écrite dans le DTO
+         ============================================================ -->
+    <data>
+        <variable
+            name="dto"
+            type="com.example.citoyenactif.model.dto.ReportCreateDTO" />
+    </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:fillViewport="true">
 
-        <!-- Titre -->
-        <TextView
-            android:id="@+id/tvReportFormTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Ajouter un rapport"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textAlignment="center"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- Champ Titre -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:hint="Titre du rapport"
-            app:layout_constraintTop_toBottomOf="@id/tvReportFormTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:maxLines="1" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Champ Description -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilDescription"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="Description"
-            app:layout_constraintTop_toBottomOf="@id/tilTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:minLines="3"
-                android:inputType="textMultiLine" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Catégorie -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilCategory"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="Catégorie"
-            app:layout_constraintTop_toBottomOf="@id/tilDescription"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <Spinner
-                android:id="@+id/spCategory"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:entries="@array/report_categories" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- ✅ Bouton Caméra -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnTakePhoto"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="📷  Prendre une photo"
-            app:backgroundTint="#1565C0"
-            android:textColor="@android:color/white"
-            app:layout_constraintTop_toBottomOf="@id/tilCategory"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- ✅ Preview de la photo prise -->
-        <ImageView
-            android:id="@+id/ivPhoto"
-            android:layout_width="0dp"
-            android:layout_height="180dp"
-            android:layout_marginTop="10dp"
-            android:scaleType="centerCrop"
-            android:background="#F0F0F0"
-            android:contentDescription="Photo du rapport"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/btnTakePhoto"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- Boutons Annuler / Enregistrer -->
         <LinearLayout
-            android:id="@+id/llButtons"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="20dp"
-            app:layout_constraintTop_toBottomOf="@id/ivPhoto"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCancelReport"
-                android:layout_width="0dp"
+            <!-- Titre dynamique (Ajouter / Détails / Modifier) -->
+            <TextView
+                android:id="@+id/tvReportFormTitle"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Annuler"
-                app:backgroundTint="#D32F2F"
+                android:text="Ajouter un rapport"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textAlignment="center"
+                android:paddingTop="8dp"
+                android:paddingBottom="12dp" />
+
+            <!-- Champ Titre — lié two-way à dto.title -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="Titre du rapport">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="@={dto.title}" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Champ Description — lié two-way à dto.description -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Description">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minLines="3"
+                    android:inputType="textMultiLine"
+                    android:text="@={dto.description}" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Catégorie -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCategory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="Catégorie">
+
+                <Spinner
+                    android:id="@+id/spCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:entries="@array/report_categories" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- ── Section Photos ──────────────────────────────────────── -->
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Photos"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Défilement horizontal des photos (Fix #8) -->
+            <HorizontalScrollView
+                android:id="@+id/hsvPhotos"
+                android:layout_width="match_parent"
+                android:layout_height="130dp"
+                android:scrollbars="none">
+
+                <!-- Les photos sont ajoutées dynamiquement ici par le code Java -->
+                <LinearLayout
+                    android:id="@+id/llPhotos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical" />
+
+            </HorizontalScrollView>
+
+            <!-- Bouton Prendre une photo (caché en mode VIEW) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnTakePhoto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="📷  Ajouter une photo"
+                app:backgroundTint="#1565C0"
                 android:textColor="@android:color/white" />
 
-            <Space
-                android:layout_width="16dp"
-                android:layout_height="wrap_content" />
+            <!-- ── Boutons d'action ─────────────────────────────────────── -->
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaveReport"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:id="@+id/llButtons"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Enregistrer"
-                app:backgroundTint="#1B5E20"
-                android:textColor="@android:color/white" />
+                android:orientation="horizontal"
+                android:layout_marginTop="20dp">
+
+                <!-- Annuler (toujours visible) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCancelReport"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Annuler"
+                    app:backgroundTint="#D32F2F"
+                    android:textColor="@android:color/white" />
+
+                <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+
+                <!-- Modifier (visible seulement en mode VIEW) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEditReport"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Modifier"
+                    android:visibility="gone"
+                    app:backgroundTint="#F57F17"
+                    android:textColor="@android:color/white" />
+
+                <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+
+                <!-- Enregistrer (visible en CREATE et EDIT, caché en VIEW) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveReport"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Enregistrer"
+                    app:backgroundTint="#1B5E20"
+                    android:textColor="@android:color/white" />
+
+            </LinearLayout>
+
         </LinearLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </layout>

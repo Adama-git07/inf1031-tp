@@ -1,30 +1,41 @@
 package com.example.citoyenactif.model.dto;
 
+import androidx.databinding.ObservableField;
+
 import com.example.citoyenactif.model.enums.UserRoles;
 
 /**
- * DTO (Data Transfer Object) utilisé lors de la création
- * d’un nouvel utilisateur.
+ * DTO utilisé lors de la création d'un compte citoyen.
  *
- * Cette classe représente les données saisies par l'utilisateur
- * dans le formulaire d'inscription (SignUpFrag).
- *
- * Elle permet de transporter les informations depuis la couche UI
- * vers la couche Repository sans exposer directement l'entité Room.
- *
- * Les données contenues ici seront converties en UserEntity
- * avant d'être enregistrées dans la base de données locale.
+ * Les champs String utilisent ObservableField pour permettre
+ * le DataBinding two-way (@={dto.field}) dans les layouts XML.
+ * Cela évite les appels manuels à getText() dans les fragments.
  */
 public class UserCreateDTO {
 
+    /** Nom de famille */
+    public ObservableField<String> lastName = new ObservableField<>("");
+
+    /** Prénom */
+    public ObservableField<String> firstName = new ObservableField<>("");
+
+    /** Adresse postale */
+    public ObservableField<String> address = new ObservableField<>("");
+
+    /** Adresse courriel unique */
+    public ObservableField<String> email = new ObservableField<>("");
+
+    /** Numéro de téléphone (10 chiffres) */
+    public ObservableField<String> phone = new ObservableField<>("");
+
     /** Nom d'utilisateur unique */
-    public String username;
+    public ObservableField<String> username = new ObservableField<>("");
 
-    /** Mot de passe saisi lors de la création du compte */
-    public String password;
+    /** Mot de passe */
+    public ObservableField<String> password = new ObservableField<>("");
 
-    /** Adresse courriel unique de l'utilisateur */
-    public String email;
+    /** Confirmation du mot de passe (non sauvegardée en BD) */
+    public ObservableField<String> confirmPassword = new ObservableField<>("");
 
     /** Rôle de l'utilisateur */
     public UserRoles role;

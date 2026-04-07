@@ -3,10 +3,14 @@ package com.example.citoyenactif.ui.report;
 import android.Manifest;
 import android.app.Application;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -19,6 +23,7 @@ import androidx.core.content.FileProvider;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.citoyenactif.R;
 import com.example.citoyenactif.data.local.entity.ReportEntity;
@@ -26,288 +31,390 @@ import com.example.citoyenactif.data.repository.ReportRepository;
 import com.example.citoyenactif.databinding.ReportActivityBinding;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportCategory;
+import com.example.citoyenactif.util.SessionManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Activité permettant à un citoyen de créer un nouveau signalement.
+ * Activité de gestion des rapports de bris.
  *
- * Cette activité permet :
- * - de saisir un titre et une description
- * - de choisir une catégorie de problème
- * - de prendre une photo avec la caméra
- * - d'enregistrer le signalement dans la base de données via le Repository
+ * Trois modes (Fix #6, #7, #8) :
+ *   • CREATE  : formulaire vide → "Enregistrer" crée un nouveau rapport
+ *   • VIEW    : champs remplis + non-éditables → bouton "Modifier"
+ *   • EDIT    : champs éditables → "Enregistrer" met à jour le rapport
  *
- * Elle utilise :
- * - DataBinding pour lier le layout XML
- * - ActivityResultLauncher pour gérer la caméra et les permissions
- * - Repository + ViewModel pour accéder aux données
+ * Passage entre modes :
+ *   - Depuis la liste → Intent avec EXTRA_REPORT_ID → MODE_VIEW
+ *   - Bouton "Modifier" → MODE_EDIT
+ *   - Bouton "Annuler" en EDIT → retour MODE_VIEW
+ *   - FAB ou bouton "+" → pas d'extra → MODE_CREATE
+ *
+ * Multi-photos (Fix #8) :
+ *   - Chaque photo est ajoutée à la liste photoUris
+ *   - Affichée comme miniature dans un HorizontalScrollView
+ *   - Stockée en BD comme "uri1|uri2|..." dans la colonne photo_uri
+ *   - Appui long sur une miniature pour la retirer (en mode EDIT/CREATE)
  */
 public class ReportActivity extends AppCompatActivity {
 
-    /** Binding du layout report_activity.xml */
+    // ── Constantes de mode ──────────────────────────────────────────────────
+    private static final int MODE_CREATE = 0;
+    private static final int MODE_VIEW   = 1;
+    private static final int MODE_EDIT   = 2;
+
+    /** Extra passé par ReportsListFragment lors d'un clic sur un rapport. */
+    public static final String EXTRA_REPORT_ID = "report_id";
+
+    // ── État ────────────────────────────────────────────────────────────────
     private ReportActivityBinding binding;
+    private ReportCreateDTO dto;
+    private int mode = MODE_CREATE;
+    private ReportEntity currentReport = null;
 
-    /** URI de la photo prise par la caméra */
-    private Uri photoUri = null;
+    /** Liste des URIs des photos attachées (peut en contenir plusieurs). */
+    private final List<String> photoUris = new ArrayList<>();
 
-    /**
-     * Launcher permettant d'ouvrir la caméra et de récupérer la photo.
-     * Si la prise de photo réussit, l'image est affichée dans l'ImageView.
-     */
+    /** URI temporaire de la photo en cours de capture. */
+    private Uri pendingPhotoUri = null;
+
+    // ── Launchers ────────────────────────────────────────────────────────────
+
     private final ActivityResultLauncher<Uri> cameraLauncher =
             registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
-                if (success && photoUri != null) {
-
-                    // Affiche la photo dans l'interface
-                    binding.ivPhoto.setImageURI(photoUri);
-                    binding.ivPhoto.setVisibility(View.VISIBLE);
-
+                if (success && pendingPhotoUri != null) {
+                    photoUris.add(pendingPhotoUri.toString());
+                    refreshPhotoStrip();
                     Toast.makeText(this, "Photo ajoutée ✓", Toast.LENGTH_SHORT).show();
-                } else {
-
-                    // Si l'utilisateur annule
-                    photoUri = null;
-                    Toast.makeText(this, "Photo annulée", Toast.LENGTH_SHORT).show();
                 }
+                pendingPhotoUri = null;
             });
 
-    /**
-     * Launcher permettant de demander la permission d'utiliser la caméra.
-     * Si la permission est accordée, la caméra est ouverte.
-     */
     private final ActivityResultLauncher<String> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
-                if (granted) {
-
-                    // Permission accordée → ouverture de la caméra
-                    openCamera();
-                } else {
-
-                    // Permission refusée
-                    Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_SHORT).show();
-                }
+                if (granted) openCamera();
+                else Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_SHORT).show();
             });
 
-    /**
-     * Méthode appelée à la création de l'activité.
-     * Initialise l'interface et les listeners des boutons.
-     */
+    // ── Lifecycle ────────────────────────────────────────────────────────────
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Liaison entre l'activité et le layout XML
+        dto = new ReportCreateDTO();
         binding = DataBindingUtil.setContentView(this, R.layout.report_activity);
+        binding.setDto(dto);
+        binding.setLifecycleOwner(this);
 
-        // Bouton annuler → fermer l'activité
-        binding.btnCancelReport.setOnClickListener(v -> finish());
+        // Déterminer le mode selon la présence de EXTRA_REPORT_ID
+        int reportId = getIntent().getIntExtra(EXTRA_REPORT_ID, -1);
 
-        // Bouton sauvegarder → enregistrer le signalement
-        binding.btnSaveReport.setOnClickListener(v -> saveReport());
+        if (reportId != -1) {
+            // Chargement d'un rapport existant en mode VIEW
+            mode = MODE_VIEW;
+            loadReport(reportId);
+        } else {
+            mode = MODE_CREATE;
+            applyMode();
+        }
 
-        // Bouton prendre photo → vérifier permission caméra
+        // ── Listeners ───────────────────────────────────────────────────────
+
+        binding.btnCancelReport.setOnClickListener(v -> {
+            if (mode == MODE_EDIT) {
+                // Retour au mode VIEW sans sauvegarder
+                mode = MODE_VIEW;
+                populateFromEntity(currentReport);
+                applyMode();
+            } else {
+                finish();
+            }
+        });
+
+        binding.btnSaveReport.setOnClickListener(v -> {
+            if (mode == MODE_CREATE) saveNewReport();
+            else if (mode == MODE_EDIT) updateReport();
+        });
+
+        binding.btnEditReport.setOnClickListener(v -> {
+            mode = MODE_EDIT;
+            applyMode();
+        });
+
         binding.btnTakePhoto.setOnClickListener(v -> checkCameraPermission());
     }
 
-    /**
-     * Vérifie si la permission caméra est accordée.
-     * Si ce n'est pas le cas, la permission est demandée à l'utilisateur.
-     */
-    private void checkCameraPermission() {
+    // ── Chargement d'un rapport existant ─────────────────────────────────────
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
-
-            // Permission déjà accordée
-            openCamera();
-
-        } else {
-
-            // Demande la permission
-            permissionLauncher.launch(Manifest.permission.CAMERA);
-        }
+    private void loadReport(int reportId) {
+        ReportViewModel viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
+        viewModel.getById(reportId).observe(this, report -> {
+            if (report != null && currentReport == null) {
+                currentReport = report;
+                populateFromEntity(report);
+                applyMode();
+            }
+        });
     }
 
     /**
-     * Ouvre la caméra pour prendre une photo.
-     * La photo sera sauvegardée dans un fichier temporaire.
+     * Remplit les champs du formulaire à partir d'un ReportEntity existant.
+     * Utilise les ObservableField du DTO pour que le DataBinding mette à jour l'UI.
      */
-    private void openCamera() {
+    private void populateFromEntity(ReportEntity report) {
+        dto.title.set(report.title != null ? report.title : "");
+        dto.description.set(report.description != null ? report.description : "");
 
-        try {
-
-            // Création du fichier image
-            File photoFile = createImageFile();
-
-            // Création de l'URI sécurisée via FileProvider
-            photoUri = FileProvider.getUriForFile(
-                    this,
-                    getPackageName() + ".fileprovider",
-                    photoFile
-            );
-
-            // Lancement de la caméra
-            cameraLauncher.launch(photoUri);
-
-        } catch (Exception e) {
-
-            Toast.makeText(this, "Erreur caméra : " + e.getMessage(), Toast.LENGTH_LONG).show();
+        // Sélection de la catégorie dans le Spinner
+        if (report.category != null) {
+            binding.spCategory.setSelection(report.category.ordinal() + 1);
         }
+
+        // Récupérer les photos stockées sous forme "uri1|uri2|..."
+        photoUris.clear();
+        if (report.photoUri != null && !report.photoUri.isEmpty()) {
+            photoUris.addAll(Arrays.asList(report.photoUri.split("\\|")));
+        }
+        refreshPhotoStrip();
     }
 
-    /**
-     * Crée un fichier image temporaire pour stocker la photo.
-     *
-     * @return fichier image créé
-     * @throws IOException si une erreur se produit lors de la création
-     */
-    private File createImageFile() throws IOException {
+    // ── Mise à jour de l'interface selon le mode ──────────────────────────────
 
-        // Génère un nom unique avec timestamp
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+    private void applyMode() {
+        boolean editable = (mode != MODE_VIEW);
 
-        // Dossier de stockage des images de l'application
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        // Champs éditables / lecture seule
+        binding.etTitle.setEnabled(editable);
+        binding.etDescription.setEnabled(editable);
+        binding.spCategory.setEnabled(editable);
 
-        // Création du fichier image
-        return File.createTempFile("REPORT_" + timestamp, ".jpg", storageDir);
+        // Bouton Prendre une photo : affiché seulement si éditable
+        binding.btnTakePhoto.setVisibility(editable ? View.VISIBLE : View.GONE);
+
+        // Bouton Enregistrer : caché en mode VIEW
+        binding.btnSaveReport.setVisibility(mode != MODE_VIEW ? View.VISIBLE : View.GONE);
+
+        // Bouton Modifier : visible seulement en mode VIEW
+        binding.btnEditReport.setVisibility(mode == MODE_VIEW ? View.VISIBLE : View.GONE);
+
+        // Titre de la page
+        switch (mode) {
+            case MODE_CREATE: binding.tvReportFormTitle.setText("Ajouter un rapport"); break;
+            case MODE_VIEW:   binding.tvReportFormTitle.setText("Détails du rapport"); break;
+            case MODE_EDIT:   binding.tvReportFormTitle.setText("Modifier le rapport"); break;
+        }
+
+        // Rafraîchir l'affichage des photos (les X de suppression changent de visibilité)
+        refreshPhotoStrip();
     }
 
-    /**
-     * Sauvegarde le signalement saisi par le citoyen.
-     *
-     * Étapes :
-     * 1. Validation des champs
-     * 2. Création du DTO
-     * 3. Enregistrement via le Repository
-     */
-    private void saveReport() {
+    // ── Sauvegarde / Mise à jour ──────────────────────────────────────────────
 
-        final String title = binding.etTitle.getText().toString().trim();
-        final String description = binding.etDescription.getText().toString().trim();
+    private void saveNewReport() {
+        if (!validateFields()) return;
 
-        // Validation du titre
-        if (title.isEmpty()) {
-            Toast.makeText(this, "Veuillez saisir un titre", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Validation de la description
-        if (description.isEmpty()) {
-            Toast.makeText(this, "Veuillez saisir une description", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Vérification de la catégorie
         int pos = binding.spCategory.getSelectedItemPosition();
-        if (pos == 0) {
-            Toast.makeText(this, "Veuillez choisir une catégorie", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        ReportCategory category = ReportCategory.values()[pos - 1];
+        dto.category = category;
+        dto.photoUris = new ArrayList<>(photoUris);
+        dto.citizenId = (int) SessionManager.getUserId(this);
+        dto.latitude  = 0.0;
+        dto.longitude = 0.0;
 
-        // Conversion de la position du spinner en enum
-        final ReportCategory category = ReportCategory.values()[pos - 1];
-
-        // Création du DTO
-        ReportCreateDTO dto = new ReportCreateDTO();
-        dto.title       = title;
-        dto.description = description;
-        dto.category    = category;
-        dto.photoUri    = photoUri != null ? photoUri.toString() : null;
-        dto.latitude    = 0.0;
-        dto.longitude   = 0.0;
-        dto.citizenId   = 0; // TODO : récupérer depuis SessionManager
-
-        // Insertion dans la base de données (thread séparé)
         new Thread(() -> {
-
             try {
-
-                ReportRepository repo = new ReportRepository(getApplication());
-                repo.insert(dto);
-
+                new ReportRepository(getApplication()).insert(dto);
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Rapport enregistré !", Toast.LENGTH_SHORT).show();
                     finish();
                 });
-
             } catch (Exception e) {
-
                 runOnUiThread(() ->
                         Toast.makeText(this, "Erreur : " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
             }
-
         }).start();
     }
 
+    private void updateReport() {
+        if (!validateFields()) return;
+
+        int pos = binding.spCategory.getSelectedItemPosition();
+        if (pos == 0) { toast("Veuillez choisir une catégorie"); return; }
+
+        currentReport.title       = dto.title.get();
+        currentReport.description = dto.description.get();
+        currentReport.category    = ReportCategory.values()[pos - 1];
+        currentReport.photoUri    = photoUris.isEmpty() ? null : String.join("|", photoUris);
+
+        new Thread(() -> {
+            new ReportRepository(getApplication()).update(currentReport);
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Rapport mis à jour !", Toast.LENGTH_SHORT).show();
+                mode = MODE_VIEW;
+                applyMode();
+            });
+        }).start();
+    }
+
+    private boolean validateFields() {
+        String title = dto.title.get() != null ? dto.title.get().trim() : "";
+        String desc  = dto.description.get() != null ? dto.description.get().trim() : "";
+
+        if (title.isEmpty()) { toast("Veuillez saisir un titre"); return false; }
+        if (desc.isEmpty())  { toast("Veuillez saisir une description"); return false; }
+
+        int pos = binding.spCategory.getSelectedItemPosition();
+        if (pos == 0) { toast("Veuillez choisir une catégorie"); return false; }
+
+        return true;
+    }
+
+    // ── Gestion des photos ────────────────────────────────────────────────────
+
+    private void checkCameraPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            openCamera();
+        } else {
+            permissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+    }
+
+    private void openCamera() {
+        try {
+            File photoFile = createImageFile();
+            pendingPhotoUri = FileProvider.getUriForFile(
+                    this, getPackageName() + ".fileprovider", photoFile
+            );
+            cameraLauncher.launch(pendingPhotoUri);
+        } catch (Exception e) {
+            toast("Erreur caméra : " + e.getMessage());
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        String ts = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        File dir  = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        return File.createTempFile("REPORT_" + ts, ".jpg", dir);
+    }
+
     /**
-     * ViewModel reliant l'interface utilisateur au Repository.
+     * Reconstruit la bande de miniatures dans le HorizontalScrollView.
      *
-     * Permet de gérer les données des signalements
-     * en respectant l'architecture MVVM.
+     * En mode EDIT/CREATE : chaque miniature a un bouton "×" pour la supprimer.
+     * En mode VIEW : les photos sont affichées en lecture seule.
      */
+    private void refreshPhotoStrip() {
+        LinearLayout strip = binding.llPhotos;
+        strip.removeAllViews();
+
+        int size = (int) (110 * getResources().getDisplayMetrics().density); // 110dp
+        int margin = (int) (8 * getResources().getDisplayMetrics().density);
+        boolean editable = (mode != MODE_VIEW);
+
+        for (int i = 0; i < photoUris.size(); i++) {
+            final int idx = i;
+            String uriStr = photoUris.get(i);
+
+            // Conteneur relatif (photo + bouton ×)
+            android.widget.RelativeLayout container = new android.widget.RelativeLayout(this);
+            LinearLayout.LayoutParams containerParams =
+                    new LinearLayout.LayoutParams(size, size);
+            containerParams.setMargins(0, 0, margin, 0);
+            container.setLayoutParams(containerParams);
+
+            // Miniature
+            ImageView iv = new ImageView(this);
+            android.widget.RelativeLayout.LayoutParams ivParams =
+                    new android.widget.RelativeLayout.LayoutParams(
+                            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.RelativeLayout.LayoutParams.MATCH_PARENT);
+            iv.setLayoutParams(ivParams);
+            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            try { iv.setImageURI(Uri.parse(uriStr)); }
+            catch (Exception ignored) { iv.setBackgroundColor(Color.LTGRAY); }
+            container.addView(iv);
+
+            // Bouton "×" pour retirer la photo (uniquement en mode EDIT/CREATE)
+            if (editable) {
+                android.widget.TextView btnRemove = new android.widget.TextView(this);
+                int btnSize = (int) (24 * getResources().getDisplayMetrics().density);
+                android.widget.RelativeLayout.LayoutParams btnParams =
+                        new android.widget.RelativeLayout.LayoutParams(btnSize, btnSize);
+                btnParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_TOP);
+                btnParams.addRule(android.widget.RelativeLayout.ALIGN_PARENT_END);
+                btnRemove.setLayoutParams(btnParams);
+                btnRemove.setText("✕");
+                btnRemove.setTextSize(12f);
+                btnRemove.setGravity(Gravity.CENTER);
+                btnRemove.setBackgroundColor(0xBB000000);
+                btnRemove.setTextColor(Color.WHITE);
+                btnRemove.setOnClickListener(v -> {
+                    photoUris.remove(idx);
+                    refreshPhotoStrip();
+                });
+                container.addView(btnRemove);
+            }
+
+            strip.addView(container);
+        }
+
+        // Indique qu'aucune photo n'est attachée si la liste est vide
+        if (photoUris.isEmpty()) {
+            android.widget.TextView empty = new android.widget.TextView(this);
+            empty.setText("Aucune photo");
+            empty.setTextColor(Color.GRAY);
+            empty.setGravity(Gravity.CENTER_VERTICAL);
+            strip.addView(empty);
+        }
+    }
+
+    // ─── Helper ───────────────────────────────────────────────────────────────
+
+    private void toast(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  ViewModel (inner class) — partagé avec ReportsListFragment
+    // ═══════════════════════════════════════════════════════════════════════════
+
     public static class ReportViewModel extends AndroidViewModel {
 
         private final ReportRepository repo;
-
-        /** Liste observable de tous les signalements */
         private LiveData<List<ReportEntity>> allReports;
 
-        /**
-         * Constructeur du ViewModel.
-         *
-         * @param application contexte de l'application
-         */
         public ReportViewModel(@NonNull Application application) {
             super(application);
             repo = new ReportRepository(application);
         }
 
-        /**
-         * Retourne tous les signalements.
-         */
         public LiveData<List<ReportEntity>> getAllReports() {
-
-            if (allReports == null) {
-                allReports = repo.getAllReports();
-            }
-
+            if (allReports == null) allReports = repo.getAllReports();
             return allReports;
         }
 
-        /**
-         * Retourne les signalements créés par un citoyen.
-         *
-         * @param citizenId identifiant du citoyen
-         */
         public LiveData<List<ReportEntity>> getReportsByCitizen(int citizenId) {
             return repo.getReportsByCitizen(citizenId);
         }
 
-        /**
-         * Insère un nouveau signalement.
-         */
-        public void insert(ReportCreateDTO dto) {
-            repo.insert(dto);
+        /** Charge un rapport par ID — utilisé en mode VIEW/EDIT. */
+        public LiveData<ReportEntity> getById(int id) {
+            return repo.getById(id);
         }
 
-        /**
-         * Supprime un signalement.
-         */
-        public void delete(ReportEntity report) {
-            repo.delete(report);
-        }
+        public void insert(ReportCreateDTO dto) { repo.insert(dto); }
+        public void delete(ReportEntity report) { repo.delete(report); }
+        public void update(ReportEntity report) { repo.update(report); }
 
-        /**
-         * Met à jour le statut d'un signalement.
-         */
         public void updateStatus(int reportId, String status) {
             repo.updateStatus(reportId, status);
         }

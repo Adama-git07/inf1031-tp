@@ -27,6 +27,7 @@ import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.databinding.ReportActivityBinding;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportCategory;
+import com.example.citoyenactif.model.enums.ReportStatus;
 import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
 import com.example.citoyenactif.util.SessionManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -233,9 +234,9 @@ public class ReportActivity extends AppCompatActivity {
                 currentReport = report;
                 populateFromEntity(report);
                 applyMode();
-                // Masquer le bouton Modifier si le citoyen connecté n'est pas l'auteur
+                // Masquer le bouton Modifier si non-propriétaire ou rapport résolu
                 long connectedUserId = SessionManager.getUserId(this);
-                if (report.citizenId != connectedUserId) {
+                if (report.citizenId != connectedUserId || report.status == ReportStatus.RESOLU) {
                     binding.btnEditReport.setVisibility(View.GONE);
                 }
             }
@@ -328,8 +329,7 @@ public class ReportActivity extends AppCompatActivity {
         }
         viewModel.update(currentReport, connectedUserId);
         Toast.makeText(this, "Rapport mis à jour !", Toast.LENGTH_SHORT).show();
-        mode = MODE_VIEW;
-        applyMode();
+        finish();
     }
 
     private boolean validateFields() {
@@ -342,7 +342,12 @@ public class ReportActivity extends AppCompatActivity {
         int pos = binding.spCategory.getSelectedItemPosition();
         if (pos == 0) { toast("Veuillez choisir une catégorie"); return false; }
 
-        if (dto.latitude == 0.0 && dto.longitude == 0.0) {
+        if (mode == MODE_CREATE && photoUris.isEmpty()) {
+            toast("Veuillez ajouter au moins une photo");
+            return false;
+        }
+
+        if (mode == MODE_CREATE && dto.latitude == 0.0 && dto.longitude == 0.0) {
             toast("Veuillez obtenir votre position avant d'enregistrer");
             return false;
         }

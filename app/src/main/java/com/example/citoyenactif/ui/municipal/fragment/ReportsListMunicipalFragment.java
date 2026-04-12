@@ -124,6 +124,15 @@ public class ReportsListMunicipalFragment extends Fragment {
     private void showStatusDialog(ReportEntity report) {
         if (report == null) return;
 
+        if (report.status == ReportStatus.RESOLU) {
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Rapport résolu")
+                    .setMessage("Ce rapport a été marqué comme résolu et ne peut plus être modifié.")
+                    .setPositiveButton("OK", null)
+                    .show();
+            return;
+        }
+
         ReportStatus[] statuses = ReportStatus.values();
         String[] labels = new String[statuses.length];
         int checked = -1;

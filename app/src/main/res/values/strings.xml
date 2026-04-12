@@ -17,6 +17,7 @@
     <string-array name="report_categories">
         <item>Choisir une catégorie...</item>
         <item>Voirie</item>
+        <item>Nid de poule</item>
         <item>Éclairage</item>
         <item>Parc</item>
         <item>Aqueduc</item>

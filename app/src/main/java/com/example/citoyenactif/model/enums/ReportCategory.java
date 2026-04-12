@@ -7,7 +7,8 @@ package com.example.citoyenactif.model.enums;
  */
 public enum ReportCategory {
 
-    VOIRIE, //Problèmes de routes, trottoirs, nids-de-poule
+    VOIRIE, //Problèmes de routes, trottoirs
+    NID_DE_POULE, //Nids-de-poule sur la chaussée
     ECLAIRAGE, //Lampadaires cassés ou éclairage public défectueux
     PARC, //Équipements de parcs abîmés, bancs cassés
     AQUEDUC, //Fuites d'eau, bouches d'égout, conduites d'eau

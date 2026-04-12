@@ -65,6 +65,7 @@ public class ReportRepository {
     public void update(ReportEntity report, long requestingUserId) {
         executor.execute(() -> {
             if (report.citizenId != requestingUserId) return;
+            if (report.status == ReportStatus.RESOLU) return;
             reportDao.update(report);
         });
     }

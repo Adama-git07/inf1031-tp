@@ -65,13 +65,14 @@ public class DatabaseClient {
                             "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                             "`title` TEXT, " +
                             "`description` TEXT, " +
-                            "`category` TEXT, " +     // enum via TypeConverter (stocké en TEXT)
-                            "`status` TEXT, " +       // enum via TypeConverter (stocké en TEXT)
+                            "`category` TEXT, " +
+                            "`status` TEXT, " +
                             "`latitude` REAL NOT NULL, " +
                             "`longitude` REAL NOT NULL, " +
-                            "`photoPath` TEXT, " +
-                            "`createdByUserId` INTEGER NOT NULL, " +
-                            "`createdAt` INTEGER NOT NULL" +
+                            "`photo_uri` TEXT, " +
+                            "`citizen_id` INTEGER NOT NULL, " +
+                            "`created_at` INTEGER NOT NULL, " +
+                            "`resolvedPhotoUri` TEXT" +
                             ")"
             );
 

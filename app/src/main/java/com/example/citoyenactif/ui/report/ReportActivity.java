@@ -1,6 +1,7 @@
 package com.example.citoyenactif.ui.report;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -28,6 +29,9 @@ import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportCategory;
 import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
 import com.example.citoyenactif.util.SessionManager;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,6 +79,9 @@ public class ReportActivity extends AppCompatActivity {
     /** ViewModel pour les rapports */
     private ReportViewModel viewModel;
 
+    /** Client de localisation fusionnée (GPS + réseau). */
+    private FusedLocationProviderClient fusedLocationClient;
+
     /** Liste des URIs des photos attachées. */
     private final List<String> photoUris = new ArrayList<>();
 
@@ -93,10 +100,18 @@ public class ReportActivity extends AppCompatActivity {
                 pendingPhotoUri = null;
             });
 
-    private final ActivityResultLauncher<String> permissionLauncher =
+    private final ActivityResultLauncher<String> cameraPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
                 if (granted) openCamera();
                 else Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_SHORT).show();
+            });
+
+    private final ActivityResultLauncher<String[]> locationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                boolean granted = Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_FINE_LOCATION))
+                        || Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_COARSE_LOCATION));
+                if (granted) fetchLocation();
+                else Toast.makeText(this, "Permission de localisation refusée", Toast.LENGTH_SHORT).show();
             });
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
@@ -110,8 +125,8 @@ public class ReportActivity extends AppCompatActivity {
         binding.setDto(dto);
         binding.setLifecycleOwner(this);
 
-        // Obtenir le ViewModel (standalone)
         viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         // Déterminer le mode selon la présence de EXTRA_REPORT_ID
         int reportId = getIntent().getIntExtra(EXTRA_REPORT_ID, -1);
@@ -147,6 +162,67 @@ public class ReportActivity extends AppCompatActivity {
         });
 
         binding.btnTakePhoto.setOnClickListener(v -> checkCameraPermission());
+        binding.btnGetLocation.setOnClickListener(v -> checkLocationPermission());
+    }
+
+    // ── Localisation ─────────────────────────────────────────────────────────
+
+    private void checkLocationPermission() {
+        boolean hasFine   = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+        boolean hasCoarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+
+        if (hasFine || hasCoarse) {
+            fetchLocation();
+        } else {
+            locationPermissionLauncher.launch(new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            });
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private void fetchLocation() {
+        binding.tvLocation.setText("Localisation en cours…");
+        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        dto.latitude  = location.getLatitude();
+                        dto.longitude = location.getLongitude();
+                        if (currentReport != null) {
+                            currentReport.latitude  = location.getLatitude();
+                            currentReport.longitude = location.getLongitude();
+                        }
+                        displayLocation(location.getLatitude(), location.getLongitude());
+                    } else {
+                        // Pas de position fraîche : on tente la dernière connue
+                        fusedLocationClient.getLastLocation()
+                                .addOnSuccessListener(last -> {
+                                    if (last != null) {
+                                        dto.latitude  = last.getLatitude();
+                                        dto.longitude = last.getLongitude();
+                                        if (currentReport != null) {
+                                            currentReport.latitude  = last.getLatitude();
+                                            currentReport.longitude = last.getLongitude();
+                                        }
+                                        displayLocation(last.getLatitude(), last.getLongitude());
+                                    } else {
+                                        binding.tvLocation.setText("Position introuvable. Activez le GPS.");
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e ->
+                        binding.tvLocation.setText("Erreur de localisation : " + e.getMessage())
+                );
+    }
+
+    private void displayLocation(double lat, double lng) {
+        String text = String.format(Locale.getDefault(), "%.6f, %.6f", lat, lng);
+        binding.tvLocation.setText(text);
+        binding.tvLocation.setTextColor(ContextCompat.getColor(this, android.R.color.black));
     }
 
     // ── Chargement d'un rapport existant ─────────────────────────────────────
@@ -177,6 +253,15 @@ public class ReportActivity extends AppCompatActivity {
             binding.spCategory.setSelection(report.category.ordinal() + 1);
         }
 
+        // Afficher la localisation enregistrée
+        if (report.latitude != 0.0 || report.longitude != 0.0) {
+            displayLocation(report.latitude, report.longitude);
+            dto.latitude  = report.latitude;
+            dto.longitude = report.longitude;
+        } else {
+            binding.tvLocation.setText("Position non définie");
+        }
+
         photoUris.clear();
         if (report.photoUri != null && !report.photoUri.isEmpty()) {
             photoUris.addAll(Arrays.asList(report.photoUri.split("\\|")));
@@ -193,6 +278,7 @@ public class ReportActivity extends AppCompatActivity {
         binding.etDescription.setEnabled(editable);
         binding.spCategory.setEnabled(editable);
 
+        binding.btnGetLocation.setVisibility(editable ? View.VISIBLE : View.GONE);
         binding.btnTakePhoto.setVisibility(editable ? View.VISIBLE : View.GONE);
         binding.btnSaveReport.setVisibility(mode != MODE_VIEW ? View.VISIBLE : View.GONE);
         binding.btnEditReport.setVisibility(mode == MODE_VIEW ? View.VISIBLE : View.GONE);
@@ -215,12 +301,8 @@ public class ReportActivity extends AppCompatActivity {
         dto.category  = ReportCategory.values()[pos - 1];
         dto.photoUris = new ArrayList<>(photoUris);
         dto.citizenId = (int) SessionManager.getUserId(this);
-        dto.latitude  = 0.0;
-        dto.longitude = 0.0;
+        // latitude/longitude sont déjà dans dto grâce à fetchLocation()
 
-        // ReportRepository.insert() exécute la requête via son ExecutorService interne.
-        // L'appel est non-bloquant : on peut afficher le Toast et fermer l'activité
-        // immédiatement sur le thread principal.
         viewModel.insert(dto);
         Toast.makeText(this, "Rapport enregistré !", Toast.LENGTH_SHORT).show();
         finish();
@@ -236,6 +318,7 @@ public class ReportActivity extends AppCompatActivity {
         currentReport.description = dto.description.get();
         currentReport.category    = ReportCategory.values()[pos - 1];
         currentReport.photoUri    = photoUris.isEmpty() ? null : String.join("|", photoUris);
+        // latitude/longitude sont déjà mis à jour dans currentReport par fetchLocation()
 
         // Vérification de propriété côté UI avant d'envoyer au ViewModel/Repository.
         long connectedUserId = SessionManager.getUserId(this);
@@ -259,6 +342,11 @@ public class ReportActivity extends AppCompatActivity {
         int pos = binding.spCategory.getSelectedItemPosition();
         if (pos == 0) { toast("Veuillez choisir une catégorie"); return false; }
 
+        if (dto.latitude == 0.0 && dto.longitude == 0.0) {
+            toast("Veuillez obtenir votre position avant d'enregistrer");
+            return false;
+        }
+
         return true;
     }
 
@@ -269,7 +357,7 @@ public class ReportActivity extends AppCompatActivity {
                 == PackageManager.PERMISSION_GRANTED) {
             openCamera();
         } else {
-            permissionLauncher.launch(Manifest.permission.CAMERA);
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
     }
 

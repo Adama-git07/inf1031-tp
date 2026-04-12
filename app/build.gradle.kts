@@ -6,10 +6,9 @@ android {
     namespace = "com.example.citoyenactif"
     compileSdk = 35
 
-        buildFeatures {
-            dataBinding = true
-        }
-    
+    buildFeatures {
+        dataBinding = true
+    }
 
     defaultConfig {
         applicationId = "com.example.citoyenactif"
@@ -20,6 +19,16 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += mapOf(
+                    "room.schemaLocation" to "$projectDir/schemas",
+                    "room.incremental" to "true",
+                    "room.expandProjection" to "true"
+                )
+            }
+        }
     }
 
     buildTypes {
@@ -31,22 +40,10 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-}
-android {
-    defaultConfig {
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments += mapOf(
-                    "room.schemaLocation" to "$projectDir/schemas",
-                    "room.incremental" to "true",
-                    "room.expandProjection" to "true"
-                )
-            }
-        }
     }
 }
 
@@ -56,6 +53,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.room.runtime)
     implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
     annotationProcessor(libs.room.compiler)
 
     // ViewModel + LiveData (architecture MVVM)

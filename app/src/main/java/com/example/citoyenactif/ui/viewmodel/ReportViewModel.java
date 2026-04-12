@@ -64,8 +64,8 @@ public class ReportViewModel extends AndroidViewModel {
         repo.delete(report);
     }
 
-    public void update(ReportEntity report) {
-        repo.update(report);
+    public void update(ReportEntity report, long requestingUserId) {
+        repo.update(report, requestingUserId);
     }
 
     /** Met à jour le statut d'un rapport (ex. "EN_ATTENTE" → "EN_COURS"). */

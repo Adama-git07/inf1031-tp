@@ -58,9 +58,15 @@ public class ReportRepository {
         executor.execute(() -> reportDao.insert(report));
     }
 
-    /** Met à jour un rapport existant (utilisé pour l'édition). */
-    public void update(ReportEntity report) {
-        executor.execute(() -> reportDao.update(report));
+    /**
+     * Met à jour un rapport uniquement si requestingUserId est l'auteur du rapport.
+     * Bloque silencieusement toute tentative de modification par un autre utilisateur.
+     */
+    public void update(ReportEntity report, long requestingUserId) {
+        executor.execute(() -> {
+            if (report.citizenId != requestingUserId) return;
+            reportDao.update(report);
+        });
     }
 
     /** Supprime un rapport. */

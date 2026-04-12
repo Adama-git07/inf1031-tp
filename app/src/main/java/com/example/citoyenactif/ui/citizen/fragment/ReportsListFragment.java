@@ -17,6 +17,7 @@ import com.example.citoyenactif.databinding.RepportsListFragmentBinding;
 import com.example.citoyenactif.ui.citizen.adapter.ReportAdapter;
 import com.example.citoyenactif.ui.report.ReportActivity;
 import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
+import com.example.citoyenactif.util.SessionManager;
 
 /**
  * Fragment affichant la liste des rapports du citoyen connecté.
@@ -69,7 +70,8 @@ public class ReportsListFragment extends Fragment {
         binder.rvReports.setLayoutManager(new LinearLayoutManager(getContext()));
         binder.rvReports.setAdapter(adapter);
 
-        viewModel.getAllReports().observe(getViewLifecycleOwner(), reports ->
+        int citizenId = (int) SessionManager.getUserId(requireContext());
+        viewModel.getReportsByCitizen(citizenId).observe(getViewLifecycleOwner(), reports ->
                 adapter.setItems(reports)
         );
 

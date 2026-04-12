@@ -157,6 +157,11 @@ public class ReportActivity extends AppCompatActivity {
                 currentReport = report;
                 populateFromEntity(report);
                 applyMode();
+                // Masquer le bouton Modifier si le citoyen connecté n'est pas l'auteur
+                long connectedUserId = SessionManager.getUserId(this);
+                if (report.citizenId != connectedUserId) {
+                    binding.btnEditReport.setVisibility(View.GONE);
+                }
             }
         });
     }
@@ -232,8 +237,13 @@ public class ReportActivity extends AppCompatActivity {
         currentReport.category    = ReportCategory.values()[pos - 1];
         currentReport.photoUri    = photoUris.isEmpty() ? null : String.join("|", photoUris);
 
-        // Même principe : l'update est asynchrone via le ExecutorService du repository.
-        viewModel.update(currentReport);
+        // Vérification de propriété côté UI avant d'envoyer au ViewModel/Repository.
+        long connectedUserId = SessionManager.getUserId(this);
+        if (currentReport.citizenId != connectedUserId) {
+            toast("Vous n'êtes pas autorisé à modifier ce rapport.");
+            return;
+        }
+        viewModel.update(currentReport, connectedUserId);
         Toast.makeText(this, "Rapport mis à jour !", Toast.LENGTH_SHORT).show();
         mode = MODE_VIEW;
         applyMode();

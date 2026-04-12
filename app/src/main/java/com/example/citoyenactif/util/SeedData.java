@@ -1,8 +1,6 @@
 package com.example.citoyenactif.util;
 
-import android.content.Context;
-
-import com.example.citoyenactif.data.local.database.DatabaseClient;
+import com.example.citoyenactif.CitoyenActifApp;
 import com.example.citoyenactif.data.local.database.DataBase;
 import com.example.citoyenactif.data.local.entity.AgentEntity;
 
@@ -17,14 +15,14 @@ import java.util.concurrent.Executors;
 public class SeedData {
 
     /**
-     * Ajoute une liste d’agents dans la BD si ils n’existent pas déjà.
+     * Ajoute une liste d'agents dans la BD si ils n'existent pas déjà.
      * - Ne supprime rien
      * - Évite les doublons grâce à agentNumber (unique)
      */
-    public static void seedAgents(Context context) {
+    public static void seedAgents() {
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            DataBase db = DatabaseClient.getInstance(context).getDb();
+            DataBase db = CitoyenActifApp.getInstance().getDatabase();
 
             // 1) Définis ici tes agents "manuels"
             List<AgentEntity> toInsert = new ArrayList<>();
@@ -57,14 +55,13 @@ public class SeedData {
      * Ajoute UN agent (utile si tu veux appeler ça depuis un bouton admin).
      * Retourne true si inséré, false si déjà existant.
      */
-    public static void addOneAgent(Context context,
-                                   String firstName,
+    public static void addOneAgent(String firstName,
                                    String name,
                                    String agentNumber,
                                    String password) {
 
         Executors.newSingleThreadExecutor().execute(() -> {
-            DataBase db = DatabaseClient.getInstance(context).getDb();
+            DataBase db = CitoyenActifApp.getInstance().getDatabase();
 
             AgentEntity existing = db.agentDao().findByAgentNumber(agentNumber);
             if (existing != null) return;

@@ -37,7 +37,7 @@ public class AuthentificationActivity extends AppCompatActivity {
                 push(new ResetPasswordFrag(), true)
         );
 
-        SeedData.seedAgents(this); //ajoute les agents
+        SeedData.seedAgents(); //ajoute les agents
 
     }
 

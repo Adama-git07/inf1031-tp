@@ -27,7 +27,7 @@ public class AgentProfileViewModel extends AndroidViewModel {
 
     public AgentProfileViewModel(@NonNull Application application) {
         super(application);
-        agentRepo = new AgentRepository(application);
+        agentRepo = new AgentRepository();
     }
 
     /** Retourne le LiveData de l'agent à observer dans le Fragment. */

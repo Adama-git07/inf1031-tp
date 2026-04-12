@@ -1,31 +1,15 @@
 package com.example.citoyenactif.data.local.database;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
-import androidx.room.Room;
-import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import java.util.concurrent.Executors;
-
 /**
  * DatabaseClient :
- * - Singleton (une seule instance) qui fournit l'accès à la base Room dans toute l'application.
- * - Centralise la création de Room.databaseBuilder(...)
- * - Déclare et enregistre les migrations (version 1 -> 2 -> 3)
- *
- * Avantage :
- * - Évite de créer plusieurs bases (coûteux) et garantit un point d'accès unique (getDb()).
+ * Contient uniquement les migrations Room.
+ * L'instance de la base est désormais gérée par {@link com.example.citoyenactif.CitoyenActifApp}.
  */
 public class DatabaseClient {
-
-    /** Instance unique (Singleton) */
-    private static DatabaseClient instance;
-
-    /** Instance RoomDatabase (ta classe @Database : DataBase) */
-    private final DataBase db;
 
     // MIGRATION 1 -> 2 : ajout de la table agents
     /**
@@ -35,7 +19,7 @@ public class DatabaseClient {
      * NOTE : Room appelle cette migration automatiquement lors d'un upgrade
      * si l'appli a déjà une BD en version 1 sur l'appareil.
      */
-    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+    public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
 
@@ -71,7 +55,7 @@ public class DatabaseClient {
      * "Room cannot verify the data integrity..."
      * => Il faut aligner la migration avec la vraie Entity (ou créer une nouvelle migration 3->4).
      */
-    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
 
@@ -99,7 +83,7 @@ public class DatabaseClient {
     };
 
     // MIGRATION 3 -> 4 : ajout des colonnes firstName, lastName, phone, address dans users
-    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+    public static final Migration MIGRATION_3_4 = new Migration(3, 4) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             // SQLite ne supporte pas ALTER TABLE ... ADD MULTIPLE COLUMNS en une commande
@@ -110,54 +94,5 @@ public class DatabaseClient {
         }
     };
 
-    /**
-     * Constructeur privé :
-     * - Empêche la création hors Singleton
-     * - Construit la base Room
-     *
-     * @param context contexte application (on utilise getApplicationContext() pour éviter fuites mémoire)
-     */
-    private DatabaseClient(Context context) {
-
-        db = Room.databaseBuilder(
-                        context.getApplicationContext(),
-                        DataBase.class,
-                        "citoyen_actif_db"
-                )
-                // Ajout des migrations pour éviter la suppression de la BD lors d'un changement de version
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
-
-                // Callback appelé uniquement lors de la première création de la BD (fresh install)
-                .addCallback(new RoomDatabase.Callback() {
-                    @Override
-                    public void onCreate(@NonNull SupportSQLiteDatabase dbSql) {
-                        super.onCreate(dbSql);
-
-                        // Exemple : exécuter un "seed" (données par défaut) dans un thread
-                        Executors.newSingleThreadExecutor().execute(() -> {
-                            // Seed agents si tu veux le garder (insert de comptes par défaut)
-                        });
-                    }
-                })
-                .build();
-    }
-
-    /**
-     * Retourne l'instance unique de DatabaseClient (Singleton).
-     * synchronized : thread-safe (évite 2 instances en même temps).
-     */
-    public static synchronized DatabaseClient getInstance(Context context) {
-        if (instance == null) {
-            instance = new DatabaseClient(context);
-        }
-        return instance;
-    }
-
-    /**
-     * Retourne l'instance de la base Room (DataBase).
-     * Permet d'accéder aux DAO : userDao(), agentDao(), reportDao(), etc.
-     */
-    public DataBase getDb() {
-        return db;
-    }
+    private DatabaseClient() {}
 }

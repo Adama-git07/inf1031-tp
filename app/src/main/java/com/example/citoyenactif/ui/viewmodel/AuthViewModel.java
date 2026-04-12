@@ -56,8 +56,8 @@ public class AuthViewModel extends AndroidViewModel {
 
     public AuthViewModel(@NonNull Application application) {
         super(application);
-        userRepo  = new UserRepository(application);
-        agentRepo = new AgentRepository(application);
+        userRepo  = new UserRepository();
+        agentRepo = new AgentRepository();
     }
 
 

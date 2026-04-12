@@ -1,9 +1,7 @@
 package com.example.citoyenactif.data.repository;
 
-import android.content.Context;
-
+import com.example.citoyenactif.CitoyenActifApp;
 import com.example.citoyenactif.data.local.dao.UserDao;
-import com.example.citoyenactif.data.local.database.DatabaseClient;
 import com.example.citoyenactif.data.local.entity.UserEntity;
 import com.example.citoyenactif.model.dto.UserCreateDTO;
 import com.example.citoyenactif.model.enums.UserRoles;
@@ -17,11 +15,8 @@ public class UserRepository {
 
     private final UserDao userDao;
 
-    public UserRepository(Context context) {
-        userDao = DatabaseClient
-                .getInstance(context)
-                .getDb()
-                .userDao();
+    public UserRepository() {
+        userDao = CitoyenActifApp.getInstance().getDatabase().userDao();
     }
 
     /**

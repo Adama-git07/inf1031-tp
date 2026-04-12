@@ -27,7 +27,7 @@ public class ProfileViewModel extends AndroidViewModel {
 
     public ProfileViewModel(@NonNull Application application) {
         super(application);
-        userRepo = new UserRepository(application);
+        userRepo = new UserRepository();
     }
 
     /** Retourne le LiveData de l'utilisateur à observer dans le Fragment. */

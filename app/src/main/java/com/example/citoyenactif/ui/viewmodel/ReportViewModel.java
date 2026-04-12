@@ -31,7 +31,7 @@ public class ReportViewModel extends AndroidViewModel {
 
     public ReportViewModel(@NonNull Application application) {
         super(application);
-        repo = new ReportRepository(application);
+        repo = new ReportRepository();
     }
 
     // ── Requêtes en lecture (LiveData) ────────────────────────────────────────

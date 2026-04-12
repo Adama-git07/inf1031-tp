@@ -1,11 +1,9 @@
 package com.example.citoyenactif.data.repository;
 
-import android.app.Application;
-
 import androidx.lifecycle.LiveData;
 
+import com.example.citoyenactif.CitoyenActifApp;
 import com.example.citoyenactif.data.local.dao.ReportDao;
-import com.example.citoyenactif.data.local.database.DatabaseClient;
 import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportStatus;
@@ -25,8 +23,8 @@ public class ReportRepository {
     private final ReportDao reportDao;
     private final ExecutorService executor;
 
-    public ReportRepository(Application application) {
-        reportDao = DatabaseClient.getInstance(application).getDb().reportDao();
+    public ReportRepository() {
+        reportDao = CitoyenActifApp.getInstance().getDatabase().reportDao();
         executor  = Executors.newSingleThreadExecutor();
     }
 

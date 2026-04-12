@@ -27,8 +27,8 @@ import com.example.citoyenactif.data.local.entity.ReportEntity;
  * Elle étend RoomDatabase, ce qui permet à Room
  * de générer automatiquement son implémentation interne.
  */
-@Database(entities = {UserEntity.class, AgentEntity.class, ReportEntity.class}, // Liste des tables de la base
-        version = 4                    // v4 : ajout firstName, lastName, phone, address dans users
+@Database(entities = {UserEntity.class, AgentEntity.class, ReportEntity.class},
+        version = 5   // v5 : ajout resolved_by_agent_id et ignore_reason dans reports
 )
 @TypeConverters({UserRoleConverter.class, ReportStatusConverter.class, ReportCategoryConverter.class})  // Permet d'utiliser l'enum UserRole
 public abstract class DataBase extends RoomDatabase {

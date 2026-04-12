@@ -19,7 +19,8 @@ public class CitoyenActifApp extends MultiDexApplication {
                 .addMigrations(
                         DatabaseClient.MIGRATION_1_2,
                         DatabaseClient.MIGRATION_2_3,
-                        DatabaseClient.MIGRATION_3_4
+                        DatabaseClient.MIGRATION_3_4,
+                        DatabaseClient.MIGRATION_4_5
                 )
                 .build();
     }

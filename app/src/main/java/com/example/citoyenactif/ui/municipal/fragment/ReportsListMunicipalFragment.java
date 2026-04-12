@@ -16,11 +16,14 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.widget.EditText;
+
 import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.databinding.ReportsListMunicipalFragmentBinding;
 import com.example.citoyenactif.model.enums.ReportStatus;
 import com.example.citoyenactif.ui.municipal.adapter.ReportAdapter;
 import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
+import com.example.citoyenactif.util.SessionManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,10 +94,11 @@ public class ReportsListMunicipalFragment extends Fragment {
                             && pendingResolveReport != null
                             && pendingPhotoUri != null) {
 
-                        // Délégation au ViewModel
+                        long agentId = SessionManager.getUserId(requireContext());
                         viewModel.resolveWithProof(
                                 pendingResolveReport.id,
-                                pendingPhotoUri.toString()
+                                pendingPhotoUri.toString(),
+                                agentId
                         );
 
                         Toast.makeText(getContext(),
@@ -166,6 +170,12 @@ public class ReportsListMunicipalFragment extends Fragment {
                         return;
                     }
 
+                    if (chosen == ReportStatus.IGNORE) {
+                        dialog.dismiss();
+                        showIgnoreReasonDialog(report);
+                        return;
+                    }
+
                     // Autres statuts : délégation au ViewModel
                     viewModel.updateStatus(report.id, chosen.name());
 
@@ -176,6 +186,34 @@ public class ReportsListMunicipalFragment extends Fragment {
                     dialog.dismiss();
                 })
                 .setNegativeButton("Annuler", (d, w) -> d.dismiss())
+                .show();
+    }
+
+    /**
+     * Affiche un dialog pour saisir la raison d'ignorance avant de confirmer.
+     */
+    private void showIgnoreReasonDialog(ReportEntity report) {
+        EditText etReason = new EditText(requireContext());
+        etReason.setHint("Raison (ex : doublon, faux rapport…)");
+        etReason.setPadding(48, 24, 48, 24);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Ignorer le rapport")
+                .setMessage("Veuillez indiquer la raison :")
+                .setView(etReason)
+                .setPositiveButton("Confirmer", (d, w) -> {
+                    String reason = etReason.getText().toString().trim();
+                    if (reason.isEmpty()) {
+                        Toast.makeText(getContext(),
+                                "Veuillez saisir une raison", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    long agentId = SessionManager.getUserId(requireContext());
+                    viewModel.ignoreWithReason(report.id, reason, agentId);
+                    Toast.makeText(getContext(),
+                            "Rapport ignoré", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Annuler", null)
                 .show();
     }
 

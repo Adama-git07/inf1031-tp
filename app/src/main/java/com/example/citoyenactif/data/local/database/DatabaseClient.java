@@ -95,5 +95,14 @@ public class DatabaseClient {
         }
     };
 
+    // MIGRATION 4 -> 5 : ajout resolved_by_agent_id et ignore_reason dans reports
+    public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE reports ADD COLUMN resolved_by_agent_id INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE reports ADD COLUMN ignore_reason TEXT");
+        }
+    };
+
     private DatabaseClient() {}
 }

@@ -73,8 +73,13 @@ public class ReportViewModel extends AndroidViewModel {
         repo.updateStatus(reportId, status);
     }
 
-    /** Marque un rapport comme résolu et enregistre l'URI de la preuve photo. */
-    public void resolveWithProof(long reportId, String proofUri) {
-        repo.resolveWithProof(reportId, proofUri);
+    /** Marque un rapport comme résolu avec preuve photo et ID de l'agent. */
+    public void resolveWithProof(long reportId, String proofUri, long agentId) {
+        repo.resolveWithProof(reportId, proofUri, agentId);
+    }
+
+    /** Marque un rapport comme ignoré avec une raison et l'ID de l'agent. */
+    public void ignoreWithReason(long reportId, String reason, long agentId) {
+        repo.ignoreWithReason(reportId, reason, agentId);
     }
 }

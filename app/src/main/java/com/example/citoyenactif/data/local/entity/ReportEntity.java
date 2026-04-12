@@ -89,4 +89,12 @@ public class ReportEntity {
      *   (ou uninstall/clear storage en phase de dev).
      */
     public String resolvedPhotoUri; // preuve prise par l’agent (camera)
+
+    /** ID de l’agent qui a résolu le rapport (0 si non résolu). */
+    @ColumnInfo(name = "resolved_by_agent_id")
+    public long resolvedByAgentId;
+
+    /** Raison fournie par l’agent lorsque le rapport est ignoré. */
+    @ColumnInfo(name = "ignore_reason")
+    public String ignoreReason;
 }

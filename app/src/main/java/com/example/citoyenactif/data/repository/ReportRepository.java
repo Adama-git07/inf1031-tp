@@ -65,7 +65,7 @@ public class ReportRepository {
     public void update(ReportEntity report, long requestingUserId) {
         executor.execute(() -> {
             if (report.citizenId != requestingUserId) return;
-            if (report.status == ReportStatus.RESOLU) return;
+            if (report.status != ReportStatus.EN_ATTENTE) return;
             reportDao.update(report);
         });
     }
@@ -95,10 +95,17 @@ public class ReportRepository {
         executor.execute(() -> reportDao.updateStatus(reportId, status));
     }
 
-    /** Marque un rapport comme résolu avec preuve photo. */
-    public void resolveWithProof(long reportId, String proofUri) {
+    /** Marque un rapport comme résolu avec preuve photo et ID de l'agent. */
+    public void resolveWithProof(long reportId, String proofUri, long agentId) {
         executor.execute(() ->
-                reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri)
+                reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri, agentId)
+        );
+    }
+
+    /** Marque un rapport comme ignoré avec une raison et l'ID de l'agent. */
+    public void ignoreWithReason(long reportId, String reason, long agentId) {
+        executor.execute(() ->
+                reportDao.ignoreWithReason(reportId, ReportStatus.IGNORE.name(), reason, agentId)
         );
     }
 

@@ -96,8 +96,11 @@ public interface ReportDao {
      * @param status statut (normalement "RESOLU")
      * @param proofUri URI de la photo de preuve
      */
-    @Query("UPDATE reports SET status = :status, resolvedPhotoUri = :proofUri WHERE id = :reportId")
-    void resolveWithProof(long reportId, String status, String proofUri);
+    @Query("UPDATE reports SET status = :status, resolvedPhotoUri = :proofUri, resolved_by_agent_id = :agentId WHERE id = :reportId")
+    void resolveWithProof(long reportId, String status, String proofUri, long agentId);
+
+    @Query("UPDATE reports SET status = :status, ignore_reason = :reason, resolved_by_agent_id = :agentId WHERE id = :reportId")
+    void ignoreWithReason(long reportId, String status, String reason, long agentId);
 
     /**
      * Retourne un rapport par son ID (LiveData pour observer les mises à jour).

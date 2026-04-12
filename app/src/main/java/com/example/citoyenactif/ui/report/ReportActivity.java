@@ -26,6 +26,7 @@ import com.example.citoyenactif.R;
 import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.databinding.ReportActivityBinding;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
+import com.example.citoyenactif.data.repository.AgentRepository;
 import com.example.citoyenactif.model.enums.ReportCategory;
 import com.example.citoyenactif.model.enums.ReportStatus;
 import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
@@ -42,6 +43,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executors;
 
 /**
  * Activité de gestion des rapports de bris.
@@ -82,6 +84,9 @@ public class ReportActivity extends AppCompatActivity {
 
     /** Client de localisation fusionnée (GPS + réseau). */
     private FusedLocationProviderClient fusedLocationClient;
+
+    /** Repository pour charger les infos de l'agent ayant résolu le rapport. */
+    private final AgentRepository agentRepository = new AgentRepository();
 
     /** Liste des URIs des photos attachées. */
     private final List<String> photoUris = new ArrayList<>();
@@ -234,9 +239,9 @@ public class ReportActivity extends AppCompatActivity {
                 currentReport = report;
                 populateFromEntity(report);
                 applyMode();
-                // Masquer le bouton Modifier si non-propriétaire ou rapport résolu
+                // Masquer le bouton Modifier si non-propriétaire ou rapport déjà traité par un agent
                 long connectedUserId = SessionManager.getUserId(this);
-                if (report.citizenId != connectedUserId || report.status == ReportStatus.RESOLU) {
+                if (report.citizenId != connectedUserId || report.status != ReportStatus.EN_ATTENTE) {
                     binding.btnEditReport.setVisibility(View.GONE);
                 }
             }
@@ -263,11 +268,97 @@ public class ReportActivity extends AppCompatActivity {
             binding.tvLocation.setText("Position non définie");
         }
 
+        populateStatus(report);
+
         photoUris.clear();
         if (report.photoUri != null && !report.photoUri.isEmpty()) {
             photoUris.addAll(Arrays.asList(report.photoUri.split("\\|")));
         }
         refreshPhotoStrip();
+    }
+
+    /**
+     * Affiche la section Statut selon la valeur de report.status.
+     * Appelé uniquement en mode VIEW (la section reste cachée en CREATE/EDIT).
+     */
+    private void populateStatus(ReportEntity report) {
+        if (report.status == null) return;
+
+        binding.llStatusSection.setVisibility(View.VISIBLE);
+
+        switch (report.status) {
+            case EN_ATTENTE:
+                binding.tvStatus.setText("En attente");
+                binding.tvStatus.setBackgroundColor(0xFFFFA000); // orange
+                binding.tvStatus.setTextColor(0xFFFFFFFF);
+                break;
+            case EN_COURS:
+                binding.tvStatus.setText("En cours");
+                binding.tvStatus.setBackgroundColor(0xFF1565C0); // bleu
+                binding.tvStatus.setTextColor(0xFFFFFFFF);
+                break;
+            case RESOLU:
+                binding.tvStatus.setText("Résolu");
+                binding.tvStatus.setBackgroundColor(0xFF2E7D32); // vert
+                binding.tvStatus.setTextColor(0xFFFFFFFF);
+                binding.llResolvedDetails.setVisibility(View.VISIBLE);
+
+                if (report.resolvedByAgentId > 0) {
+                    Executors.newSingleThreadExecutor().execute(() -> {
+                        com.example.citoyenactif.data.local.entity.AgentEntity agent =
+                                agentRepository.getById(report.resolvedByAgentId);
+                        runOnUiThread(() -> {
+                            if (agent != null) {
+                                binding.tvResolvedByAgent.setText(
+                                        "Traité par " + agent.firstName + " " + agent.name
+                                        + " - " + agent.agentNumber);
+                            } else {
+                                binding.tvResolvedByAgent.setText("Traité par un agent inconnu");
+                            }
+                        });
+                    });
+                } else {
+                    binding.tvResolvedByAgent.setText("—");
+                }
+
+                if (report.resolvedPhotoUri != null && !report.resolvedPhotoUri.isEmpty()) {
+                    try {
+                        binding.ivResolvedProof.setImageURI(Uri.parse(report.resolvedPhotoUri));
+                    } catch (Exception ignored) { }
+                }
+                break;
+
+            case IGNORE:
+                binding.tvStatus.setText("Ignoré");
+                binding.tvStatus.setBackgroundColor(0xFFD32F2F); // rouge
+                binding.tvStatus.setTextColor(0xFFFFFFFF);
+                binding.llIgnoredDetails.setVisibility(View.VISIBLE);
+
+                if (report.resolvedByAgentId > 0) {
+                    Executors.newSingleThreadExecutor().execute(() -> {
+                        com.example.citoyenactif.data.local.entity.AgentEntity agent =
+                                agentRepository.getById(report.resolvedByAgentId);
+                        runOnUiThread(() -> {
+                            if (agent != null) {
+                                binding.tvIgnoredByAgent.setText(
+                                        "Traité par " + agent.firstName + " " + agent.name
+                                        + " - " + agent.agentNumber);
+                            } else {
+                                binding.tvIgnoredByAgent.setText("Traité par un agent inconnu");
+                            }
+                        });
+                    });
+                } else {
+                    binding.tvIgnoredByAgent.setText("—");
+                }
+
+                binding.tvIgnoreReason.setText(
+                        report.ignoreReason != null && !report.ignoreReason.isEmpty()
+                                ? report.ignoreReason
+                                : "Aucune raison fournie"
+                );
+                break;
+        }
     }
 
     // ── Mise à jour de l'interface selon le mode ──────────────────────────────
@@ -281,6 +372,7 @@ public class ReportActivity extends AppCompatActivity {
 
         binding.btnGetLocation.setVisibility(editable ? View.VISIBLE : View.GONE);
         binding.btnTakePhoto.setVisibility(editable ? View.VISIBLE : View.GONE);
+        binding.llStatusSection.setVisibility(mode == MODE_VIEW ? View.VISIBLE : View.GONE);
         binding.btnSaveReport.setVisibility(mode != MODE_VIEW ? View.VISIBLE : View.GONE);
         binding.btnEditReport.setVisibility(mode == MODE_VIEW ? View.VISIBLE : View.GONE);
 

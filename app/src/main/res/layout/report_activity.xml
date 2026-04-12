@@ -2,11 +2,6 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- ============================================================
-         DATABINDING : variable dto lié two-way aux champs texte
-         @={dto.title}       → saisie auto-écrite dans le DTO
-         @={dto.description} → saisie auto-écrite dans le DTO
-         ============================================================ -->
     <data>
         <variable
             name="dto"
@@ -153,6 +148,105 @@
                 android:text="📷  Ajouter une photo"
                 app:backgroundTint="#1565C0"
                 android:textColor="@android:color/white" />
+
+            <!-- ── Section Statut (visible uniquement en mode VIEW) ──────── -->
+
+            <LinearLayout
+                android:id="@+id/llStatusSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Statut"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- Affiché uniquement si RESOLU -->
+                <LinearLayout
+                    android:id="@+id/llResolvedDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvResolvedByAgent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp"
+                        android:textColor="#424242"
+                        android:layout_marginBottom="10dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Photo de preuve"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:layout_marginBottom="6dp" />
+
+                    <ImageView
+                        android:id="@+id/ivResolvedProof"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:scaleType="centerCrop"
+                        android:background="#E0E0E0"
+                        android:layout_marginBottom="8dp" />
+
+                </LinearLayout>
+
+                <!-- Affiché uniquement si IGNORE -->
+                <LinearLayout
+                    android:id="@+id/llIgnoredDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvIgnoredByAgent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp"
+                        android:textColor="#424242"
+                        android:layout_marginBottom="10dp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Raison"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:layout_marginBottom="2dp" />
+
+                    <TextView
+                        android:id="@+id/tvIgnoreReason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="13sp"
+                        android:textColor="#424242" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
             <!-- ── Boutons d'action ─────────────────────────────────────── -->
 

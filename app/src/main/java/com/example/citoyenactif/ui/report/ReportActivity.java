@@ -30,9 +30,6 @@ import com.example.citoyenactif.model.enums.ReportCategory;
 import com.example.citoyenactif.model.enums.ReportStatus;
 import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
 import com.example.citoyenactif.util.SessionManager;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,6 +69,10 @@ public class ReportActivity extends BaseActivity {
     /** Extra passé par ReportsListFragment lors d'un clic sur un rapport. */
     public static final String EXTRA_REPORT_ID = "report_id";
 
+    /** Extras de pré-remplissage de coordonnées (depuis un clic sur la carte). */
+    public static final String EXTRA_LATITUDE  = "latitude";
+    public static final String EXTRA_LONGITUDE = "longitude";
+
     // ── État ────────────────────────────────────────────────────────────────
     private ReportActivityBinding binding;
     private ReportCreateDTO dto;
@@ -80,9 +81,6 @@ public class ReportActivity extends BaseActivity {
 
     /** ViewModel pour les rapports */
     private ReportViewModel viewModel;
-
-    /** Client de localisation fusionnée (GPS + réseau). */
-    private FusedLocationProviderClient fusedLocationClient;
 
     /** Repository pour charger les infos de l'agent ayant résolu le rapport. */
     private final AgentRepository agentRepository = new AgentRepository();
@@ -128,7 +126,7 @@ public class ReportActivity extends BaseActivity {
         Boolean coarseGranted = results.get(PERM_LOCATION_COARSE);
         if (fineGranted != null || coarseGranted != null) {
             if (Boolean.TRUE.equals(fineGranted) || Boolean.TRUE.equals(coarseGranted)) {
-                fetchLocation();
+                triggerLocate(); // délégué au LocationViewModel
             } else {
                 toast("Permission de localisation refusée");
             }
@@ -147,7 +145,27 @@ public class ReportActivity extends BaseActivity {
         binding.setLifecycleOwner(this);
 
         viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // ── Observer la position GPS (via LocationViewModel hérité de BaseActivity) ──
+        getLocationViewModel().getCurrentLocation().observe(this, location -> {
+            if (location == null) return;
+            dto.latitude  = location.getLatitude();
+            dto.longitude = location.getLongitude();
+            if (currentReport != null) {
+                currentReport.latitude  = location.getLatitude();
+                currentReport.longitude = location.getLongitude();
+            }
+            displayLocation(location.getLatitude(), location.getLongitude());
+        });
+
+        // ── Pré-remplissage depuis un clic carte (extras EXTRA_LATITUDE/LONGITUDE) ──
+        double extraLat = getIntent().getDoubleExtra(EXTRA_LATITUDE, 0.0);
+        double extraLng = getIntent().getDoubleExtra(EXTRA_LONGITUDE, 0.0);
+        if (extraLat != 0.0 || extraLng != 0.0) {
+            dto.latitude  = extraLat;
+            dto.longitude = extraLng;
+            displayLocation(extraLat, extraLng);
+        }
 
         // Déterminer le mode selon la présence de EXTRA_REPORT_ID
         int reportId = getIntent().getIntExtra(EXTRA_REPORT_ID, -1);
@@ -190,46 +208,21 @@ public class ReportActivity extends BaseActivity {
 
     private void checkLocationPermission() {
         if (hasLocationPermission()) {
-            fetchLocation();
+            triggerLocate();
         } else {
             requestLocationPermissions(); // délégué à BaseActivity
         }
     }
 
+    /**
+     * Déclenche la localisation via le LocationViewModel hérité de BaseActivity.
+     * Le résultat sera reçu dans l'observateur getCurrentLocation() déclaré dans onCreate().
+     * @SuppressLint nécessaire car la permission est vérifiée avant l'appel.
+     */
     @SuppressLint("MissingPermission")
-    private void fetchLocation() {
+    private void triggerLocate() {
         binding.tvLocation.setText("Localisation en cours…");
-        fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                .addOnSuccessListener(location -> {
-                    if (location != null) {
-                        dto.latitude  = location.getLatitude();
-                        dto.longitude = location.getLongitude();
-                        if (currentReport != null) {
-                            currentReport.latitude  = location.getLatitude();
-                            currentReport.longitude = location.getLongitude();
-                        }
-                        displayLocation(location.getLatitude(), location.getLongitude());
-                    } else {
-                        // Pas de position fraîche : on tente la dernière connue
-                        fusedLocationClient.getLastLocation()
-                                .addOnSuccessListener(last -> {
-                                    if (last != null) {
-                                        dto.latitude  = last.getLatitude();
-                                        dto.longitude = last.getLongitude();
-                                        if (currentReport != null) {
-                                            currentReport.latitude  = last.getLatitude();
-                                            currentReport.longitude = last.getLongitude();
-                                        }
-                                        displayLocation(last.getLatitude(), last.getLongitude());
-                                    } else {
-                                        binding.tvLocation.setText("Position introuvable. Activez le GPS.");
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(e ->
-                        binding.tvLocation.setText("Erreur de localisation : " + e.getMessage())
-                );
+        getLocationViewModel().locate();
     }
 
     private void displayLocation(double lat, double lng) {

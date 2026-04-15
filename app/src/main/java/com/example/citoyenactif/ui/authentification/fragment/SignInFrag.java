@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.citoyenactif.databinding.SignInFragBinding;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
+
 import com.example.citoyenactif.ui.citizen.CitizenPageActivity;
 import com.example.citoyenactif.ui.municipal.MunicipalPageActivity;
 import com.example.citoyenactif.ui.viewmodel.AuthViewModel;
@@ -62,6 +63,20 @@ public class SignInFrag extends Fragment {
 
         // Clic sur bouton "Connexion"
         binder.btnLogin.setOnClickListener(v -> handleLogin());
+
+        // Lien "Créer un compte" → SignUpFrag
+        binder.tvCreateAccount.setOnClickListener(v -> {
+            if (requireActivity() instanceof AuthentificationActivity) {
+                ((AuthentificationActivity) requireActivity()).goToSignUp();
+            }
+        });
+
+        // Lien "Mot de passe oublié ?" → ResetPasswordFrag
+        binder.tvForgotPassword.setOnClickListener(v -> {
+            if (requireActivity() instanceof AuthentificationActivity) {
+                ((AuthentificationActivity) requireActivity()).goToResetPassword();
+            }
+        });
 
         // ── Observation des résultats ──────────────────────────────────────────
 

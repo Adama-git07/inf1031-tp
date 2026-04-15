@@ -15,19 +15,22 @@
     </style>
     <style name="Theme.CitoyenActif.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
 
-        <!-- Couleurs principales -->
-        <item name="colorPrimary">@color/sky_blue</item>
-        <item name="colorPrimaryVariant">@color/sky_blue_dark</item>
-        <item name="colorSecondary">@color/accent_teal</item>
+        <!-- Couleurs UQTR -->
+        <item name="colorPrimary">@color/uqtr_green</item>
+        <item name="colorPrimaryVariant">@color/uqtr_green_dark</item>
+        <item name="colorOnPrimary">@color/uqtr_white</item>
+        <item name="colorSecondary">@color/uqtr_gold</item>
+        <item name="colorSecondaryVariant">@color/uqtr_gold_dark</item>
+        <item name="colorOnSecondary">@color/uqtr_white</item>
 
         <!-- Fond général -->
-        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:windowBackground">@color/uqtr_green</item>
 
-        <!-- (Optionnel) couleurs texte par défaut -->
+        <!-- Couleurs texte par défaut -->
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
 
-        <!-- (Optionnel) barre de statut : un bleu plus foncé -->
-        <item name="android:statusBarColor">@color/sky_blue_dark</item>
+        <!-- Barre de statut verte UQTR -->
+        <item name="android:statusBarColor">@color/uqtr_green_dark</item>
     </style>
 </resources>

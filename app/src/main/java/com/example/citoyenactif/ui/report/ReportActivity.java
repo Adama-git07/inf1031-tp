@@ -1,8 +1,6 @@
 package com.example.citoyenactif.ui.report;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,11 +14,12 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
+
+import com.example.citoyenactif.ui.BaseActivity;
 
 import com.example.citoyenactif.R;
 import com.example.citoyenactif.data.local.entity.ReportEntity;
@@ -63,7 +62,7 @@ import java.util.concurrent.Executors;
  *   - Chaque photo est ajoutée à la liste photoUris
  *   - Stockée en BD comme "uri1|uri2|..." dans la colonne photo_uri
  */
-public class ReportActivity extends AppCompatActivity {
+public class ReportActivity extends BaseActivity {
 
     // ── Constantes de mode ──────────────────────────────────────────────────
     private static final int MODE_CREATE = 0;
@@ -106,19 +105,35 @@ public class ReportActivity extends AppCompatActivity {
                 pendingPhotoUri = null;
             });
 
-    private final ActivityResultLauncher<String> cameraPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
-                if (granted) openCamera();
-                else Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_SHORT).show();
-            });
+    // ── Callback permissions (héritées de BaseActivity) ──────────────────────
 
-    private final ActivityResultLauncher<String[]> locationPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                boolean granted = Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_FINE_LOCATION))
-                        || Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_COARSE_LOCATION));
-                if (granted) fetchLocation();
-                else Toast.makeText(this, "Permission de localisation refusée", Toast.LENGTH_SHORT).show();
-            });
+    /**
+     * Résultats des demandes de permissions gérées par BaseActivity.
+     * Réagit à PERM_CAMERA et PERM_LOCATION_FINE / PERM_LOCATION_COARSE.
+     */
+    @Override
+    protected void onPermissionsResult(java.util.Map<String, Boolean> results) {
+        // ── Caméra ────────────────────────────────────────────────────────────
+        Boolean cameraGranted = results.get(PERM_CAMERA);
+        if (cameraGranted != null) {
+            if (Boolean.TRUE.equals(cameraGranted)) {
+                openCamera();
+            } else {
+                toast("Permission caméra refusée");
+            }
+        }
+
+        // ── Localisation ──────────────────────────────────────────────────────
+        Boolean fineGranted   = results.get(PERM_LOCATION_FINE);
+        Boolean coarseGranted = results.get(PERM_LOCATION_COARSE);
+        if (fineGranted != null || coarseGranted != null) {
+            if (Boolean.TRUE.equals(fineGranted) || Boolean.TRUE.equals(coarseGranted)) {
+                fetchLocation();
+            } else {
+                toast("Permission de localisation refusée");
+            }
+        }
+    }
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -174,18 +189,10 @@ public class ReportActivity extends AppCompatActivity {
     // ── Localisation ─────────────────────────────────────────────────────────
 
     private void checkLocationPermission() {
-        boolean hasFine   = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-        boolean hasCoarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-
-        if (hasFine || hasCoarse) {
+        if (hasLocationPermission()) {
             fetchLocation();
         } else {
-            locationPermissionLauncher.launch(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            });
+            requestLocationPermissions(); // délégué à BaseActivity
         }
     }
 
@@ -450,11 +457,10 @@ public class ReportActivity extends AppCompatActivity {
     // ── Gestion des photos ────────────────────────────────────────────────────
 
     private void checkCameraPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
+        if (hasCameraPermission()) {
             openCamera();
         } else {
-            cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+            requestCameraPermission(); // délégué à BaseActivity
         }
     }
 

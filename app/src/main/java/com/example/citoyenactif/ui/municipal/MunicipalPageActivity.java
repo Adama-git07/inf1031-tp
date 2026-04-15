@@ -5,11 +5,11 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.R;
+import com.example.citoyenactif.ui.BaseActivity;
 import com.example.citoyenactif.databinding.MunicipalPageActivityBinding;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
 import com.example.citoyenactif.ui.citizen.fragment.ReportMapFragment;
@@ -32,7 +32,7 @@ import com.example.citoyenactif.util.SessionManager;
  * - Fragments pour afficher les différentes sections
  * - BottomNavigationView pour la navigation
  */
-public class MunicipalPageActivity extends AppCompatActivity {
+public class MunicipalPageActivity extends BaseActivity {
 
     /** Binding permettant d'accéder aux vues du layout municipal_page_activity.xml */
     private MunicipalPageActivityBinding binder;

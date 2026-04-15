@@ -16,6 +16,14 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Stockage — lecture des images de la galerie -->
+    <!-- Android 13+ (API 33) : READ_MEDIA_IMAGES remplace READ_EXTERNAL_STORAGE -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Android ≤ 12 : READ_EXTERNAL_STORAGE (ignoré automatiquement sur API 33+) -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:name=".CitoyenActifApp"
         android:allowBackup="true"

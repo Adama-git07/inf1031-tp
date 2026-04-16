@@ -16,13 +16,11 @@
     <color name="uqtr_gold_dark">#D48F00</color>
     <color name="uqtr_white">#FFFFFF</color>
 
-    <!-- Neutres -->
     <color name="app_background">#F6F9FC</color>
     <color name="text_primary">#102A43</color>
     <color name="text_secondary">#486581</color>
     <color name="input_background">#F0F7F4</color>
 
-    <!-- Anciens — conservés pour compatibilité -->
     <color name="sky_blue">#4FC3F7</color>
     <color name="sky_blue_dark">#0288D1</color>
     <color name="sky_blue_light">#B3E5FC</color>

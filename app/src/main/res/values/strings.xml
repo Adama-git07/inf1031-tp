@@ -4,14 +4,8 @@
         \nConnectez-vous pour signaler un bris ou suivre vos rapports.</string>
     <string name="citizen_page_welcome">Bienvenue sur Citoyen Actif
         \nConsultez vos rapports ou ajoutez-en un nouveau.</string>
-    <!--
-        CLÉ API GOOGLE MAPS
-        ══════════════════════════════════════════════════════════════
-        Remplacez "YOUR_GOOGLE_MAPS_API_KEY_HERE" par votre vraie clé
-        obtenue sur : https://console.cloud.google.com/
-        (activer l'API "Maps SDK for Android" dans votre projet GCP)
-        ══════════════════════════════════════════════════════════════
-    -->
+
+    <!--CLÉ API GOOGLE MAPS-->
     <string name="google_maps_key" translatable="false">AIzaSyCFbcRDayr3o3ZKdO8Q1yPhvQt6Q7tLPpk</string>
 
     <string-array name="report_categories">

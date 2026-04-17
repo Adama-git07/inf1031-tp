@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "287726918398",
+    "project_id": "citoyenactif-6e42c",
+    "storage_bucket": "citoyenactif-6e42c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287726918398:android:3a99b143ab847c1b04a3af",
+        "android_client_info": {
+          "package_name": "com.example.citoyenactif"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7ooJZxPVWaPtlk-dW-oMW6JiKmQ2sUDk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

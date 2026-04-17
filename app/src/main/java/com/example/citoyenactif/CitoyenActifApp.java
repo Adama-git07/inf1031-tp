@@ -9,9 +9,13 @@ import androidx.annotation.Nullable;
 import androidx.multidex.MultiDexApplication;
 import androidx.room.Room;
 
+import android.util.Log;
+
 import com.example.citoyenactif.data.local.database.DataBase;
 import com.example.citoyenactif.data.local.database.DatabaseClient;
+import com.example.citoyenactif.data.repository.ReportRepository;
 import com.example.citoyenactif.ui.BaseActivity;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 /**
  * Classe Application du projet CitoyenActif.
@@ -58,6 +62,17 @@ public class CitoyenActifApp extends MultiDexApplication
 
         // Enregistrement des callbacks du cycle de vie des activités
         registerActivityLifecycleCallbacks(this);
+
+        // Synchronisation initiale : télécharge les rapports Firestore → Room
+        // (s'exécute en arrière-plan, ne bloque pas le démarrage)
+        new ReportRepository().syncFromFirestore();
+
+        // Récupération explicite du token FCM — visible dans Logcat sous le tag "FCM_TOKEN"
+        FirebaseMessaging.getInstance().getToken()
+                .addOnSuccessListener(token ->
+                        Log.d("FCM_TOKEN", "Token FCM : " + token))
+                .addOnFailureListener(e ->
+                        Log.e("FCM_TOKEN", "Impossible d'obtenir le token FCM", e));
     }
 
     // ── Accesseurs ────────────────────────────────────────────────────────────

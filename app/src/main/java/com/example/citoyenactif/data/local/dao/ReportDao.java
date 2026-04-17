@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -23,10 +24,22 @@ public interface ReportDao {
 
     /**
      * Insère un nouveau rapport dans la base.
+     * Retourne l'ID auto-généré — utilisé pour synchroniser avec Firestore.
+     *
      * @param report entité ReportEntity à insérer
+     * @return id généré par Room (Long)
      */
     @Insert
-    void insert(ReportEntity report);
+    long insert(ReportEntity report);
+
+    /**
+     * Insère ou remplace un rapport (utilisé lors du pull depuis Firestore).
+     * Si un rapport avec le même ID existe déjà, il est écrasé.
+     *
+     * @param report rapport reçu de Firestore
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertOrReplace(ReportEntity report);
 
     /**
      * Met à jour toutes les colonnes d'un rapport existant.

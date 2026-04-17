@@ -16,6 +16,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Notifications push (FCM) — Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- Stockage — lecture des images de la galerie -->
     <!-- Android 13+ (API 33) : READ_MEDIA_IMAGES remplace READ_EXTERNAL_STORAGE -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
@@ -67,6 +70,23 @@
         <activity
             android:name=".ui.municipal.MunicipalPageActivity"
             android:theme="@style/Theme.CitoyenActif.NoActionBar" />
+
+        <!-- ══════════════════════════════════════════════════════════════
+             SERVICE FCM — notifications push (bonus +5)
+             Reçoit les messages Firebase Cloud Messaging en foreground.
+             ══════════════════════════════════════════════════════════════ -->
+        <service
+            android:name=".service.CitoyenMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Canal de notification par défaut (affiché si non spécifié dans le payload) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="citoyen_actif_channel" />
 
         <!-- FileProvider pour la caméra -->
         <provider

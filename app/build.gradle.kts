@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+    // Add the Google services Gradle plugin
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -60,4 +62,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.7")
     implementation("androidx.lifecycle:lifecycle-livedata:2.8.7")
     implementation("androidx.fragment:fragment:1.8.5")
+    // Firebase BOM — gère toutes les versions automatiquement
+    implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+    // Firestore — base de données cloud
+    implementation("com.google.firebase:firebase-firestore")
+    // FCM — notifications push (bonus +5)
+    implementation("com.google.firebase:firebase-messaging")
 }

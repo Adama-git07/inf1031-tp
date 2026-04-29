@@ -1,9 +1,7 @@
 package com.example.citoyenactif.data.repository;
 
-import android.content.Context;
-
+import com.example.citoyenactif.CitoyenActifApp;
 import com.example.citoyenactif.data.local.dao.AgentDao;
-import com.example.citoyenactif.data.local.database.DatabaseClient;
 import com.example.citoyenactif.data.local.entity.AgentEntity;
 
 /**
@@ -32,11 +30,8 @@ public class AgentRepository {
      *
      * @param context contexte Android (on prend généralement applicationContext)
      */
-    public AgentRepository(Context context) {
-        agentDao = DatabaseClient
-                .getInstance(context)
-                .getDb()
-                .agentDao();
+    public AgentRepository() {
+        agentDao = CitoyenActifApp.getInstance().getDatabase().agentDao();
     }
 
     /**

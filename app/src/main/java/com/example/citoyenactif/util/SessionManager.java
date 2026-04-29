@@ -2,6 +2,10 @@ package com.example.citoyenactif.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 /**
  * Classe utilitaire permettant de gérer la session utilisateur
@@ -35,7 +39,29 @@ public class SessionManager {
     private static final String KEY_IS_AGENT = "is_agent";
 
     /**
+     * Connecte anonymement l'utilisateur à Firebase Authentication.
+     *
+     * Cela est nécessaire pour que les règles de sécurité Firestore
+     * acceptent les opérations de lecture/écriture (require auth != null).
+     * Si une session Firebase anonyme existe déjà, aucune nouvelle connexion n'est créée.
+     */
+    private static void signInFirebaseAnonymously() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if (currentUser == null) {
+            auth.signInAnonymously()
+                    .addOnSuccessListener(result ->
+                            Log.d("SessionManager", "Connexion Firebase anonyme réussie — uid: "
+                                    + result.getUser().getUid()))
+                    .addOnFailureListener(e ->
+                            Log.e("SessionManager", "Échec connexion Firebase anonyme", e));
+        }
+    }
+
+    /**
      * Sauvegarde la session d'un citoyen après une connexion réussie.
+     * Déclenche aussi une authentification anonyme Firebase pour autoriser
+     * les écritures Firestore.
      *
      * @param context contexte de l'application
      * @param userId identifiant du citoyen dans la base de données
@@ -46,10 +72,13 @@ public class SessionManager {
                 .putLong(KEY_USER_ID, userId)
                 .putBoolean(KEY_IS_AGENT, false)
                 .apply();
+        signInFirebaseAnonymously();
     }
 
     /**
      * Sauvegarde la session d'un agent après authentification.
+     * Déclenche aussi une authentification anonyme Firebase pour autoriser
+     * les écritures Firestore.
      *
      * Contrairement au citoyen, l'identifiant de l'agent est
      * également sauvegardé afin de pouvoir récupérer ses informations
@@ -64,6 +93,7 @@ public class SessionManager {
                 .putLong(KEY_USER_ID, agentId)   // on stocke l'id de l'agent dans la session
                 .putBoolean(KEY_IS_AGENT, true)
                 .apply();
+        signInFirebaseAnonymously();
     }
 
     /**
@@ -89,7 +119,8 @@ public class SessionManager {
     }
 
     /**
-     * Supprime les informations de session stockées.
+     * Supprime les informations de session stockées et déconnecte
+     * l'utilisateur de Firebase Authentication.
      *
      * Cette méthode est généralement utilisée lors de la
      * déconnexion de l'utilisateur afin d'effacer toutes
@@ -102,5 +133,6 @@ public class SessionManager {
                 .edit()
                 .clear()
                 .apply();
+        FirebaseAuth.getInstance().signOut();
     }
 }

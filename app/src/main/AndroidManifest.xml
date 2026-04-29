@@ -2,13 +2,33 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permission caméra -->
+    <!-- Caméra -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- Réseau (obligatoire pour charger les tuiles Google Maps) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Géolocalisation -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Notifications push (FCM) — Android 13+ -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Stockage — lecture des images de la galerie -->
+    <!-- Android 13+ (API 33) : READ_MEDIA_IMAGES remplace READ_EXTERNAL_STORAGE -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Android ≤ 12 : READ_EXTERNAL_STORAGE (ignoré automatiquement sur API 33+) -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
+        android:name=".CitoyenActifApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -18,6 +38,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CitoyenActif.NoActionBar"
         tools:targetApi="31">
+
+        <!--
+            CLÉ API GOOGLE MAPS
+            La valeur est lue depuis res/values/strings.xml → google_maps_key
+            Remplacez "YOUR_GOOGLE_MAPS_API_KEY_HERE" dans strings.xml
+            par la clé obtenue sur https://console.cloud.google.com/
+        -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/google_maps_key" />
 
         <activity
             android:name=".ui.authentification.AuthentificationActivity"
@@ -41,6 +71,23 @@
             android:name=".ui.municipal.MunicipalPageActivity"
             android:theme="@style/Theme.CitoyenActif.NoActionBar" />
 
+        <!-- ══════════════════════════════════════════════════════════════
+             SERVICE FCM — notifications push (bonus +5)
+             Reçoit les messages Firebase Cloud Messaging en foreground.
+             ══════════════════════════════════════════════════════════════ -->
+        <service
+            android:name=".service.CitoyenMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Canal de notification par défaut (affiché si non spécifié dans le payload) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="citoyen_actif_channel" />
+
         <!-- FileProvider pour la caméra -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -51,7 +98,6 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
-
 
     </application>
 

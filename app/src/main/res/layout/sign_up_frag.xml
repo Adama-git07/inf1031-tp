@@ -1,129 +1,279 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    <data>
+        <variable
+            name="dto"
+            type="com.example.citoyenactif.model.dto.UserCreateDTO" />
+    </data>
+
+    <!-- Fond vert UQTR — identique à sign_in_frag -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp">
+        android:background="@color/uqtr_green"
+        android:fillViewport="true">
 
-        <!-- Titre -->
-        <TextView
-            android:id="@+id/welcome_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="NOUVELLE CONNEXION"
-            android:textStyle="bold"
-            android:textSize="18dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <!-- Bloc du formulaire -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/form_card"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="8dp"
-            app:layout_constraintTop_toBottomOf="@id/welcome_message"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            <!-- Icône localisation -->
+            <ImageView
+                android:id="@+id/ivLocationPin"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_location_pin"
+                android:layout_marginTop="28dp"
+                android:contentDescription="Icône localisation"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- Contenu interne -->
-            <LinearLayout
-                android:layout_width="match_parent"
+            <!-- Titre app -->
+            <TextView
+                android:id="@+id/tvAppTitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:text="Citoyen Actif"
+                android:textColor="@color/uqtr_white"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:layout_marginTop="6dp"
+                app:layout_constraintTop_toBottomOf="@id/ivLocationPin"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-                <!-- champ nom -->
-                <EditText
-                    android:id="@+id/name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Nom"/>
+            <!-- Ligne décorative dorée -->
+            <View
+                android:id="@+id/dividerGold"
+                android:layout_width="60dp"
+                android:layout_height="3dp"
+                android:background="@color/uqtr_gold"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@id/tvAppTitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-                <!-- champ prenom -->
-                <EditText
-                    android:id="@+id/first_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Prenom"/>
+            <!-- Carte blanche formulaire -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/form_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="@color/uqtr_white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                app:layout_constraintTop_toBottomOf="@id/dividerGold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
-                <!-- champ adresse mail -->
-                <EditText
-                    android:id="@+id/email"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Adresse mail"/>
-
-                <!-- champ numero telephone -->
-                <EditText
-                    android:id="@+id/phone_number"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Numéro de téléphone"/>
-
-                <!-- champ nom utilisateur -->
-                <EditText
-                    android:id="@+id/username"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Nom d'utilisateur"/>
-
-                <!-- champ mot de passe -->
-                <EditText
-                    android:id="@+id/password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Mot de passe"
-                    android:inputType="textPassword"/>
-
-                <!-- champ cormation mot de passe -->
-                <EditText
-                    android:id="@+id/confirm_password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Confirmez le mot de passe"
-                    android:inputType="textPassword"/>
-
-                <!-- Boutons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
+                    android:orientation="vertical"
+                    android:padding="24dp">
 
-                    <!-- button Annuler -->
-                    <Button
-                        android:id="@+id/cancel_button"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <!-- Titre section -->
+                    <TextView
+                        android:id="@+id/welcome_message"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="ANNULER"
-                        android:backgroundTint="#D32F2F"/>
+                        android:text="Créer un compte"
+                        android:textColor="@color/uqtr_green"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:layout_marginBottom="20dp" />
 
-                    <!-- espace entre les buttons -->
-                    <Space
-                        android:layout_width="16dp"
-                        android:layout_height="wrap_content"/>
-
-                    <!-- button confirmer -->
-                    <Button
-                        android:id="@+id/confirm_button"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
+                    <!-- NOM -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="CONFIRMER"
-                        android:backgroundTint="#1976D2"/>
+                        android:hint="Nom"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName"
+                            android:text="@={dto.lastName}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- PRÉNOM -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Prénom"
+                        android:layout_marginTop="12dp"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/first_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPersonName"
+                            android:text="@={dto.firstName}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- ADRESSE -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Adresse"
+                        android:layout_marginTop="12dp"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/address"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPostalAddress"
+                            android:text="@={dto.address}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- COURRIEL -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Adresse courriel"
+                        android:layout_marginTop="12dp"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/email"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textEmailAddress"
+                            android:text="@={dto.email}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- TÉLÉPHONE -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Numéro de téléphone (10 chiffres)"
+                        android:layout_marginTop="12dp"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/phone_number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="phone"
+                            android:text="@={dto.phone}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- NOM D'UTILISATEUR -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Nom d'utilisateur"
+                        android:layout_marginTop="12dp"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/username"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="@={dto.username}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- MOT DE PASSE -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Mot de passe (min 6 caractères)"
+                        android:layout_marginTop="12dp"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green"
+                        app:endIconMode="password_toggle"
+                        app:endIconTint="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/password"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPassword"
+                            android:text="@={dto.password}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- CONFIRMATION MOT DE PASSE -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Confirmez le mot de passe"
+                        android:layout_marginTop="12dp"
+                        app:boxStrokeColor="@color/uqtr_green"
+                        app:hintTextColor="@color/uqtr_green"
+                        app:endIconMode="password_toggle"
+                        app:endIconTint="@color/uqtr_green">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/confirm_password"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textPassword"
+                            android:text="@={dto.confirmPassword}" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Boutons ANNULER / CONFIRMER -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="20dp">
+
+                        <Button
+                            android:id="@+id/cancel_button"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="48dp"
+                            android:text="ANNULER"
+                            android:textColor="@color/uqtr_white"
+                            android:textStyle="bold"
+                            android:backgroundTint="@color/text_secondary" />
+
+                        <Space
+                            android:layout_width="12dp"
+                            android:layout_height="wrap_content" />
+
+                        <Button
+                            android:id="@+id/confirm_button"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="48dp"
+                            android:text="CONFIRMER"
+                            android:textColor="@color/uqtr_white"
+                            android:textStyle="bold"
+                            android:backgroundTint="@color/uqtr_gold" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </layout>

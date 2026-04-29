@@ -137,14 +137,14 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportVH> 
                   OnReportLongClickListener longClickListener) {
 
             // --- 1) Affichage du titre du report ---
-            binding.tvReportTitle.setText(report.title);
+            binding.tvReportTitle.setText(report.title != null ? report.title : "");
 
-            // --- 2) Affichage "Catégorie • Statut" ---
-            // On gère les valeurs null pour éviter un crash (NullPointerException).
+            // --- 2) Affichage de la description (Fix #3 : était un placeholder) ---
+            binding.tvReportDesc.setText(report.description != null ? report.description : "");
+
+            // --- 3) Affichage "Catégorie • Statut" ---
             String category = (report.category != null) ? report.category.name() : "—";
-            String status = (report.status != null) ? report.status.name() : "—";
-
-            // \u2022 = caractère "•"
+            String status   = (report.status   != null) ? report.status.name()   : "—";
             binding.tvReportMeta.setText(category + " \u2022 " + status);
 
             // --- 3) Clic simple : on délègue au fragment/activité ---

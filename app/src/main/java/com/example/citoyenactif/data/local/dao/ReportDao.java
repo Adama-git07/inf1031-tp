@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -17,22 +18,28 @@ import java.util.List;
  * Rôle :
  * - Définir toutes les opérations SQL autorisées sur les rapports :
  *   insertion, mise à jour, suppression, et requêtes de lecture.
- *
- * Remarques importantes :
- * - Les méthodes qui retournent LiveData permettent une mise à jour automatique de l'UI :
- *   dès qu'une ligne change dans la table, l'observer (fragment/activité) est notifié.
- * - Les colonnes utilisées dans les requêtes (citizen_id, created_at) doivent correspondre
- *   exactement aux @ColumnInfo de ReportEntity.
  */
 @Dao
 public interface ReportDao {
 
     /**
      * Insère un nouveau rapport dans la base.
+     * Retourne l'ID auto-généré — utilisé pour synchroniser avec Firestore.
+     *
      * @param report entité ReportEntity à insérer
+     * @return id généré par Room (Long)
      */
     @Insert
-    void insert(ReportEntity report);
+    long insert(ReportEntity report);
+
+    /**
+     * Insère ou remplace un rapport (utilisé lors du pull depuis Firestore).
+     * Si un rapport avec le même ID existe déjà, il est écrasé.
+     *
+     * @param report rapport reçu de Firestore
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertOrReplace(ReportEntity report);
 
     /**
      * Met à jour toutes les colonnes d'un rapport existant.
@@ -102,6 +109,19 @@ public interface ReportDao {
      * @param status statut (normalement "RESOLU")
      * @param proofUri URI de la photo de preuve
      */
-    @Query("UPDATE reports SET status = :status, resolvedPhotoUri = :proofUri WHERE id = :reportId")
-    void resolveWithProof(long reportId, String status, String proofUri);
+    @Query("UPDATE reports SET status = :status, resolvedPhotoUri = :proofUri, resolved_by_agent_id = :agentId WHERE id = :reportId")
+    void resolveWithProof(long reportId, String status, String proofUri, long agentId);
+
+    @Query("UPDATE reports SET status = :status, ignore_reason = :reason, resolved_by_agent_id = :agentId WHERE id = :reportId")
+    void ignoreWithReason(long reportId, String status, String reason, long agentId);
+
+    /**
+     * Retourne un rapport par son ID (LiveData pour observer les mises à jour).
+     * Utilisé pour le mode visualisation/édition dans ReportActivity.
+     *
+     * @param id identifiant du rapport
+     * @return LiveData<ReportEntity>
+     */
+    @Query("SELECT * FROM reports WHERE id = :id LIMIT 1")
+    LiveData<ReportEntity> getById(int id);
 }

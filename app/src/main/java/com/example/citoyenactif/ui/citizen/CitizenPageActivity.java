@@ -3,11 +3,11 @@ package com.example.citoyenactif.ui.citizen;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.example.citoyenactif.R;
+import com.example.citoyenactif.ui.BaseActivity;
 import com.example.citoyenactif.databinding.CitizenPageActivityBinding;
 import com.example.citoyenactif.ui.citizen.fragment.ProfilFragment;
 import com.example.citoyenactif.ui.citizen.fragment.ReportMapFragment;
@@ -25,7 +25,7 @@ import com.example.citoyenactif.ui.citizen.fragment.ReportsListFragment;
  * - ReportMapFragment (carte des rapports)
  * - ProfilFragment (profil utilisateur)
  */
-public class CitizenPageActivity extends AppCompatActivity {
+public class CitizenPageActivity extends BaseActivity {
 
     private CitizenPageActivityBinding binder;
 

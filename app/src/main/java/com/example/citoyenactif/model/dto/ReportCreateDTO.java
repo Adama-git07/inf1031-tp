@@ -1,45 +1,48 @@
 package com.example.citoyenactif.model.dto;
 
+import androidx.databinding.ObservableField;
+
 import com.example.citoyenactif.model.enums.ReportCategory;
 import com.example.citoyenactif.model.enums.ReportStatus;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * DTO (Data Transfer Object) utilisé lors de la création d'un rapport de bris.
+ * DTO utilisé lors de la création ou modification d'un rapport de bris.
  *
- * Rôle :
- * - Servir de "conteneur" de données entre la couche UI (formulaire) et la couche Data (Repository/Room)
- * - Éviter d'utiliser directement l'entité Room (ReportEntity) dans l'UI
+ * Les champs texte utilisent ObservableField pour le DataBinding two-way
+ * dans report_activity.xml (@={dto.title}, @={dto.description}).
  *
- * Remarque :
- * - Souvent, le statut n'a pas besoin d'être fourni par l'UI : le repository peut forcer EN_ATTENTE
- *   au moment de l'insertion (ce que tu fais déjà).
+ * photoUris est une liste permettant d'attacher plusieurs photos par rapport.
+ * Elles sont stockées en BD sous forme de chaîne séparée par "|".
  */
 public class ReportCreateDTO {
 
-    /** Titre du rapport (ex: "Nid-de-poule important") */
-    public String title;
+    /** Titre du rapport — lié two-way au champ etTitle */
+    public ObservableField<String> title = new ObservableField<>("");
 
-    /** Description détaillée du problème */
-    public String description;
+    /** Description — liée two-way au champ etDescription */
+    public ObservableField<String> description = new ObservableField<>("");
 
-    /** Catégorie du bris (VOIRIE, ECLAIRAGE, PARC, etc.) */
+    /** Catégorie du bris */
     public ReportCategory category;
 
-    /**
-     * Statut du rapport.
-     * (Optionnel à l'entrée : généralement le repository met EN_ATTENTE automatiquement.)
-     */
+    /** Statut (généralement forcé à EN_ATTENTE par le Repository) */
     public ReportStatus status;
 
-    /** URI de la photo associée au rapport (prise par le citoyen ou choisie) */
-    public String photoUri;
+    /**
+     * Liste des URIs des photos attachées au rapport.
+     * Stockée en BD sous la forme : "uri1|uri2|uri3"
+     */
+    public List<String> photoUris = new ArrayList<>();
 
-    /** Latitude de la position GPS du bris */
+    /** Latitude GPS */
     public double latitude;
 
-    /** Longitude de la position GPS du bris */
+    /** Longitude GPS */
     public double longitude;
 
-    /** Identifiant du citoyen ayant créé le rapport */
+    /** Identifiant du citoyen auteur du rapport */
     public int citizenId;
 }

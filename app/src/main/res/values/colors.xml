@@ -7,16 +7,22 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <!-- Bleu ciel / convivial -->
-    <color name="sky_blue">#4FC3F7</color>
-    <color name="sky_blue_dark">#0288D1</color>
-    <color name="sky_blue_light">#B3E5FC</color>
 
-    <!-- Neutres -->
+    <!-- UQTR — Université du Québec à Trois-Rivières -->
+    <color name="uqtr_green">#00693E</color>
+    <color name="uqtr_green_dark">#004D2C</color>
+    <color name="uqtr_green_light">#338C63</color>
+    <color name="uqtr_gold">#F5A800</color>
+    <color name="uqtr_gold_dark">#D48F00</color>
+    <color name="uqtr_white">#FFFFFF</color>
+
     <color name="app_background">#F6F9FC</color>
     <color name="text_primary">#102A43</color>
     <color name="text_secondary">#486581</color>
+    <color name="input_background">#F0F7F4</color>
 
-    <!-- Accent (pour boutons, liens, etc.) -->
+    <color name="sky_blue">#4FC3F7</color>
+    <color name="sky_blue_dark">#0288D1</color>
+    <color name="sky_blue_light">#B3E5FC</color>
     <color name="accent_teal">#26C6DA</color>
 </resources>

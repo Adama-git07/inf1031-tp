@@ -1,12 +1,11 @@
 package com.example.citoyenactif.data.repository;
 
-import android.app.Application;
-
 import androidx.lifecycle.LiveData;
 
+import com.example.citoyenactif.CitoyenActifApp;
 import com.example.citoyenactif.data.local.dao.ReportDao;
-import com.example.citoyenactif.data.local.database.DatabaseClient;
 import com.example.citoyenactif.data.local.entity.ReportEntity;
+import com.example.citoyenactif.data.remote.FirestoreRepository;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportStatus;
 
@@ -15,140 +14,156 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Repository responsable de la gestion des rapports de bris.
+ * Repository des rapports — intermédiaire entre l'UI et les sources de données.
  *
- * Rôle :
- * - Servir de couche intermédiaire entre l'UI (Fragments/Activities) et la base de données Room (DAO).
- * - Encapsuler la logique d'accès aux données (insert/update/delete/queries).
- * - Exécuter les opérations d'écriture (insert/update/delete) dans un thread secondaire.
+ * Stratégie double source :
+ *   - Room    : cache local (lecture réactive via LiveData, fonctionne hors ligne)
+ *   - Firestore : cloud (synchronisation après chaque écriture Room)
  *
- * Avantage :
- * - L'UI n'appelle jamais directement le DAO => séparation des responsabilités (architecture propre).
+ * Flux d'écriture : UI → ViewModel → ReportRepository → Room puis → Firestore
+ * Flux de lecture : Firestore pull (démarrage) → Room insertOrReplace → LiveData notifie l'UI
  */
 public class ReportRepository {
 
-    /** DAO Room pour accéder à la table "reports" */
-    private final ReportDao reportDao;
+    private final ReportDao           reportDao;
+    private final FirestoreRepository firestore;
+    private final ExecutorService     executor;
 
-    /**
-     * Executor (thread unique) utilisé pour exécuter les opérations d'écriture
-     * (Room interdit les accès DB sur le thread principal).
-     */
-    private final ExecutorService executor;
-
-    /**
-     * Constructeur :
-     * - Récupère l'instance unique de la base Room via DatabaseClient
-     * - Récupère le ReportDao
-     * - Initialise l'executor (un seul thread en file d'attente)
-     *
-     * @param application contexte Application (plus sûr qu'un contexte Activity)
-     */
-    public ReportRepository(Application application) {
-        reportDao = DatabaseClient.getInstance(application).getDb().reportDao();
-        executor = Executors.newSingleThreadExecutor();
+    public ReportRepository() {
+        reportDao = CitoyenActifApp.getInstance().getDatabase().reportDao();
+        firestore = new FirestoreRepository();
+        executor  = Executors.newSingleThreadExecutor();
     }
 
+    //  ÉCRITURE — Room + Firestore
+
     /**
-     * Crée un nouveau rapport à partir d'un DTO (données saisies dans l'UI).
+     * Insère un rapport dans Room puis le pousse vers Firestore.
      *
-     * Étapes :
-     * - Convertit le ReportCreateDTO (UI) en ReportEntity (Room)
-     * - Force le statut EN_ATTENTE à la création (bonne pratique)
-     * - Fixe createdAt avec l'heure actuelle
-     * - Insère en base dans un thread secondaire
-     *
-     * @param dto données du formulaire de création report
+     * L'ID auto-généré par Room est récupéré pour être utilisé comme
+     * identifiant du document Firestore (garantit la cohérence entre les deux bases).
      */
     public void insert(ReportCreateDTO dto) {
 
-        // Transformation DTO -> Entity
         ReportEntity report = new ReportEntity();
-        report.title = dto.title;
-        report.description = dto.description;
-        report.category = dto.category;
 
-        // Statut forcé à EN_ATTENTE à la création (même si dto.status existe)
-        report.status = ReportStatus.EN_ATTENTE;
+        report.title       = dto.title.get()       != null ? dto.title.get().trim()       : "";
+        report.description = dto.description.get() != null ? dto.description.get().trim() : "";
+        report.category    = dto.category;
+        report.status      = ReportStatus.EN_ATTENTE;
 
-        report.photoUri = dto.photoUri;
-        report.latitude = dto.latitude;
+        if (dto.photoUris != null && !dto.photoUris.isEmpty()) {
+            report.photoUri = String.join("|", dto.photoUris);
+        } else {
+            report.photoUri = null;
+        }
+
+        report.latitude  = dto.latitude;
         report.longitude = dto.longitude;
         report.citizenId = dto.citizenId;
-
-        // Date de création (timestamp en millisecondes)
         report.createdAt = System.currentTimeMillis();
 
-        // Insertion Room en background
-        executor.execute(() -> reportDao.insert(report));
+        executor.execute(() -> {
+            // 1. Insertion Room → récupération de l'ID généré
+            long generatedId = reportDao.insert(report);
+            report.id = (int) generatedId;
+
+            // 2. Push Firestore avec le même ID
+            firestore.pushReport(report);
+        });
     }
 
     /**
-     * Met à jour un rapport existant.
-     * Exécuté en arrière-plan.
+     * Met à jour un rapport si le demandeur en est l'auteur et que le statut
+     * est encore EN_ATTENTE. Synchronise ensuite avec Firestore.
      */
-    public void update(ReportEntity report) {
-        executor.execute(() -> reportDao.update(report));
+    public void update(ReportEntity report, long requestingUserId) {
+        executor.execute(() -> {
+            if (report.citizenId != requestingUserId) return;
+            if (report.status != ReportStatus.EN_ATTENTE) return;
+            reportDao.update(report);
+            firestore.pushReport(report);
+        });
     }
 
     /**
-     * Supprime un rapport.
-     * Exécuté en arrière-plan.
+     * Supprime un rapport de Room et de Firestore.
      */
     public void delete(ReportEntity report) {
-        executor.execute(() -> reportDao.delete(report));
+        executor.execute(() -> {
+            reportDao.delete(report);
+            firestore.deleteReport(report.id);
+        });
     }
 
     /**
-     * Retourne (en LiveData) la liste des rapports créés par un citoyen.
-     * LiveData : l'UI observe et se met à jour automatiquement.
-     *
-     * @param citizenId id du citoyen
+     * Met à jour le statut d'un rapport dans Room et dans Firestore.
      */
+    public void updateStatus(long reportId, String status) {
+        executor.execute(() -> {
+            reportDao.updateStatus(reportId, status);
+            firestore.pushStatusUpdate(reportId, status);
+        });
+    }
+
+    /**
+     * Marque un rapport comme résolu avec preuve photo.
+     * Synchronise Room et Firestore.
+     */
+    public void resolveWithProof(long reportId, String proofUri, long agentId) {
+        executor.execute(() -> {
+            reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri, agentId);
+            firestore.pushResolveWithProof(reportId, proofUri, agentId);
+        });
+    }
+
+    /**
+     * Marque un rapport comme ignoré avec une raison.
+     * Synchronise Room et Firestore.
+     */
+    public void ignoreWithReason(long reportId, String reason, long agentId) {
+        executor.execute(() -> {
+            reportDao.ignoreWithReason(reportId, ReportStatus.IGNORE.name(), reason, agentId);
+            firestore.pushIgnoreWithReason(reportId, reason, agentId);
+        });
+    }
+
+    //  SYNCHRONISATION — pull Firestore → Room (appelé au démarrage)
+
+    /**
+     * Télécharge tous les rapports depuis Firestore et les upsert dans Room.
+     *
+     * Utilise insertOrReplace pour ne pas écraser les données plus récentes
+     * avec des données obsolètes dans un cas de conflit de version.
+     *
+     * À appeler une fois au démarrage de l'application (CitoyenActifApp.onCreate).
+     */
+    public void syncFromFirestore() {
+        firestore.pullAllReports(report ->
+                executor.execute(() -> reportDao.insertOrReplace(report))
+        );
+    }
+
+
+    //  LECTURE — LiveData Room
+
+    /** Rapports d'un citoyen (LiveData). */
     public LiveData<List<ReportEntity>> getReportsByCitizen(int citizenId) {
         return reportDao.getReportsByCitizen(citizenId);
     }
 
-    /**
-     * Retourne (en LiveData) la liste de tous les rapports.
-     * Utile pour la vue municipale (agent).
-     */
+    /** Tous les rapports (LiveData) — vue agent. */
     public LiveData<List<ReportEntity>> getAllReports() {
         return reportDao.getAllReports();
     }
 
-    /**
-     * Retourne (en LiveData) seulement les rapports en attente (EN_ATTENTE).
-     * Utile pour prioriser les traitements.
-     */
+    /** Rapports en attente (LiveData). */
     public LiveData<List<ReportEntity>> getPendingReports() {
         return reportDao.getPendingReports();
     }
 
-    /**
-     * Met à jour uniquement le statut d'un rapport (ex: EN_COURS, IGNORE, etc.).
-     * Exécuté en arrière-plan.
-     *
-     * @param reportId id du rapport
-     * @param status nouveau statut (String, ex: "EN_COURS")
-     */
-    public void updateStatus(long reportId, String status) {
-        executor.execute(() -> reportDao.updateStatus(reportId, status));
-    }
-
-    /**
-     * Marque un rapport comme RESOLU avec une preuve (URI photo prise par l'agent).
-     *
-     * - Force le statut à RESOLU (ReportStatus.RESOLU.name())
-     * - Enregistre l'URI de preuve dans la colonne resolvedPhotoUri
-     * - Exécuté en arrière-plan
-     *
-     * @param reportId id du rapport
-     * @param proofUri URI (String) de la photo de preuve
-     */
-    public void resolveWithProof(long reportId, String proofUri) {
-        executor.execute(() ->
-                reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri)
-        );
+    /** Rapport par ID (LiveData). */
+    public LiveData<ReportEntity> getById(int id) {
+        return reportDao.getById(id);
     }
 }

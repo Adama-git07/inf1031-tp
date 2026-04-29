@@ -68,11 +68,14 @@ public class CitoyenActifApp extends MultiDexApplication
         new ReportRepository().syncFromFirestore();
 
         // Récupération explicite du token FCM — visible dans Logcat sous le tag "FCM_TOKEN"
+        Log.d("FCM_TOKEN", "Tentative de récupération du token FCM...");
         FirebaseMessaging.getInstance().getToken()
-                .addOnSuccessListener(token ->
-                        Log.d("FCM_TOKEN", "Token FCM : " + token))
+                .addOnSuccessListener(token -> {
+                        Log.d("FCM_TOKEN", "Token FCM : " + token);
+                        Log.d("FCM_TOKEN", "=== COPIEZ CE TOKEN POUR TESTER ===");
+                })
                 .addOnFailureListener(e ->
-                        Log.e("FCM_TOKEN", "Impossible d'obtenir le token FCM", e));
+                        Log.e("FCM_TOKEN", "Impossible d'obtenir le token FCM — cause : " + e.getMessage(), e));
     }
 
     // ── Accesseurs ────────────────────────────────────────────────────────────

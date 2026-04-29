@@ -66,6 +66,8 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     // Firestore — base de données cloud
     implementation("com.google.firebase:firebase-firestore")
+    // Firebase Authentication — nécessaire pour les règles de sécurité Firestore
+    implementation("com.google.firebase:firebase-auth")
     // FCM — notifications push (bonus +5)
     implementation("com.google.firebase:firebase-messaging")
 }

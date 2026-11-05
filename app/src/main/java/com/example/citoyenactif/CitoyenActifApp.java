@@ -10,6 +10,7 @@ import androidx.multidex.MultiDexApplication;
 import androidx.room.Room;
 
 import android.util.Log;
+import com.example.citoyenactif.util.SeedData;
 
 import com.example.citoyenactif.data.local.database.DataBase;
 import com.example.citoyenactif.data.local.database.DatabaseClient;
@@ -62,6 +63,10 @@ public class CitoyenActifApp extends MultiDexApplication
 
         // Enregistrement des callbacks du cycle de vie des activités
         registerActivityLifecycleCallbacks(this);
+
+        // Insertion des données par défaut (agents + rapports de démonstration)
+        SeedData.seedAgents();
+        SeedData.seedReports();
 
         // Synchronisation initiale : télécharge les rapports Firestore → Room
         // (s'exécute en arrière-plan, ne bloque pas le démarrage)

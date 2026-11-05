@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    // Add the Google services Gradle plugin
     id("com.google.gms.google-services")
 }
 
@@ -58,16 +57,22 @@ dependencies {
     implementation(libs.play.services.location)
     annotationProcessor(libs.room.compiler)
 
-    // ViewModel + LiveData (architecture MVVM)
+    // ViewModel + LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.7")
     implementation("androidx.lifecycle:lifecycle-livedata:2.8.7")
     implementation("androidx.fragment:fragment:1.8.5")
-    // Firebase BOM — gère toutes les versions automatiquement
+
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
-    // Firestore — base de données cloud
     implementation("com.google.firebase:firebase-firestore")
     // Firebase Authentication — nécessaire pour les règles de sécurité Firestore
     implementation("com.google.firebase:firebase-auth")
     // FCM — notifications push (bonus +5)
     implementation("com.google.firebase:firebase-messaging")
+
+    // Retrofit + OkHttp + Gson
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.code.gson:gson:2.10.1")
 }

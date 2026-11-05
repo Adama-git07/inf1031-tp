@@ -124,4 +124,13 @@ public interface ReportDao {
      */
     @Query("SELECT * FROM reports WHERE id = :id LIMIT 1")
     LiveData<ReportEntity> getById(int id);
+
+    /**
+     * Compte le nombre total de rapports dans la base.
+     * Utilisé par SeedData pour éviter de réinsérer les données par défaut.
+     *
+     * @return nombre de rapports
+     */
+    @Query("SELECT COUNT(*) FROM reports")
+    int countReports();
 }

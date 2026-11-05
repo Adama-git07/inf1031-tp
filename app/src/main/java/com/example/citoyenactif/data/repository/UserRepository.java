@@ -3,20 +3,32 @@ package com.example.citoyenactif.data.repository;
 import com.example.citoyenactif.CitoyenActifApp;
 import com.example.citoyenactif.data.local.dao.UserDao;
 import com.example.citoyenactif.data.local.entity.UserEntity;
+import com.example.citoyenactif.data.local.proxies.AccountProxy;
+import com.example.citoyenactif.data.local.proxies.Proxy;
+import com.example.citoyenactif.model.dto.LoginResponseDTO;
 import com.example.citoyenactif.model.dto.UserCreateDTO;
+import com.example.citoyenactif.model.dto.UserLoginDTO;
 import com.example.citoyenactif.model.enums.UserRoles;
+
+import java.io.IOException;
+import java.util.function.Consumer;
+
+import retrofit2.Response;
 
 /**
  * Repository responsable de la gestion des utilisateurs.
  *
  * Intermédiaire entre la couche UI et la base de données Room.
+ * Supporte aussi la connexion via le serveur Retrofit (tryLogin).
  */
 public class UserRepository {
 
     private final UserDao userDao;
+    private final AccountProxy proxy;
 
     public UserRepository() {
         userDao = CitoyenActifApp.getInstance().getDatabase().userDao();
+        proxy   = Proxy.build(AccountProxy.class);
     }
 
     /**
@@ -27,7 +39,6 @@ public class UserRepository {
      * @return id du nouvel utilisateur inséré
      */
     public long register(UserCreateDTO dto) {
-
         UserEntity user = new UserEntity();
 
         // Lecture des ObservableField (null-safe)
@@ -46,7 +57,7 @@ public class UserRepository {
     }
 
     /**
-     * Vérifie les identifiants de connexion.
+     * Vérifie les identifiants de connexion via Room (local).
      *
      * @param login    username ou email
      * @param password mot de passe
@@ -54,6 +65,26 @@ public class UserRepository {
      */
     public UserEntity login(String login, String password) {
         return userDao.login(login, password);
+    }
+
+    /**
+     * Tente la connexion via le serveur Retrofit.
+     * Fallback automatique sur Room si le serveur est inaccessible.
+     *
+     * @param cred    identifiants de connexion (UserLoginDTO)
+     * @param success callback appelé avec true si connexion réussie, false sinon
+     */
+    public void tryLogin(UserLoginDTO cred, Consumer<Boolean> success) {
+        Proxy.connexionPool.execute(() -> {
+            try {
+                Response<LoginResponseDTO> response = proxy.login(cred).execute();
+                success.accept(response.isSuccessful());
+            } catch (IOException e) {
+                // Serveur inaccessible → fallback Room
+                UserEntity user = userDao.login(cred.login, cred.password);
+                success.accept(user != null);
+            }
+        });
     }
 
     /**

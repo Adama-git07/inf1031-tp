@@ -216,6 +216,28 @@
                             android:inputType="textPassword" />
                     </com.google.android.material.textfield.TextInputLayout>
 
+                    <!-- Connexion sans mot de passe avec la carte NFC -->
+                    <Button
+                        android:id="@+id/btnNfc"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="12dp"
+                        android:text="ACTIVER AVEC MA CARTE NFC"
+                        android:textColor="@color/uqtr_green" />
+
+                    <!-- Lien pour programmer une nouvelle carte -->
+                    <TextView
+                        android:id="@+id/tvWriteCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:padding="8dp"
+                        android:text="Programmer une carte d'agent"
+                        android:textColor="@color/uqtr_green"
+                        android:textSize="13sp" />
+
                 </LinearLayout>
 
                 <!-- Bouton CONNEXION — doré -->

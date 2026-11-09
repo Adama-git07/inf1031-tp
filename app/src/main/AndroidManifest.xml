@@ -8,6 +8,12 @@
         android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!-- NFC : lecture des cartes d'agents (required=false : l'app reste installable sans NFC) -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="false" />
+
     <!-- Réseau (obligatoire pour charger les tuiles Google Maps) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -58,6 +64,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Écran de connexion par carte NFC (agents municipaux) -->
+        <activity
+            android:name=".ui.authentification.NfcScanActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CitoyenActif.NoActionBar" />
+
+        <!-- Écran de programmation des cartes NFC -->
+        <activity
+            android:name=".ui.authentification.NfcWriteActivity"
+            android:exported="false"
+            android:theme="@style/Theme.CitoyenActif.NoActionBar" />
 
         <activity
             android:name=".ui.citizen.CitizenPageActivity"

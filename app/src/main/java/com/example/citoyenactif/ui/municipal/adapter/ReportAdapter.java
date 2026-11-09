@@ -12,8 +12,15 @@ import com.example.citoyenactif.databinding.ItemReportBinding;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Adapter de la liste des signalements (côté agent municipal).
+ *
+ * Avec DataBinding, l'adapter donne seulement le signalement et le listener
+ * au layout item_report.xml : c'est le XML qui affiche les données et gère le clic.
+ */
 public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.VH> {
 
+    /** Interface appelée quand on clique sur un signalement (utilisée dans le XML). */
     public interface OnReportClickListener {
         void onReportClick(ReportEntity report);
     }
@@ -25,6 +32,7 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.VH> {
         this.listener = listener;
     }
 
+    /** Remplace la liste affichée. */
     public void submit(List<ReportEntity> data) {
         items.clear();
         if (data != null) items.addAll(data);
@@ -41,19 +49,11 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
-        ReportEntity r = items.get(position);
-
-        holder.b.tvReportTitle.setText(r.title != null ? r.title : "");
-        holder.b.tvReportDesc.setText(r.description != null ? r.description : "");
-
-        String category = (r.category != null) ? r.category.name() : "—";
-        String status = (r.status != null) ? r.status.name() : "—";
-        String meta = category + " • " + status + " • citoyen #" + r.citizenId;
-        holder.b.tvReportMeta.setText(meta);
-
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) listener.onReportClick(r);
-        });
+        // On donne au layout le signalement et le listener : le XML fait le reste
+        holder.b.setReport(items.get(position));
+        holder.b.setListener(listener);
+        holder.b.setShowCitizen(true);   // l'agent voit aussi le numéro du citoyen
+        holder.b.executePendingBindings();
     }
 
     @Override
@@ -61,8 +61,13 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.VH> {
         return items.size();
     }
 
+    /** ViewHolder qui garde le binding de la ligne. */
     static class VH extends RecyclerView.ViewHolder {
         final ItemReportBinding b;
-        VH(ItemReportBinding b) { super(b.getRoot()); this.b = b; }
+
+        VH(ItemReportBinding b) {
+            super(b.getRoot());
+            this.b = b;
+        }
     }
 }

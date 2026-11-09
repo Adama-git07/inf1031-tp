@@ -16,11 +16,11 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import android.widget.EditText;
-
 import com.example.citoyenactif.data.local.entity.ReportEntity;
+import com.example.citoyenactif.databinding.DialogReportDetailBinding;
 import com.example.citoyenactif.databinding.ReportsListMunicipalFragmentBinding;
 import com.example.citoyenactif.model.enums.ReportStatus;
+import com.example.citoyenactif.ui.binding.ReportEditModel;
 import com.example.citoyenactif.ui.municipal.adapter.ReportAdapter;
 import com.example.citoyenactif.ui.viewmodel.ReportViewModel;
 import com.example.citoyenactif.util.SessionManager;
@@ -34,16 +34,9 @@ import java.util.Locale;
 /**
  * Fragment de la partie municipale affichant la liste des signalements.
  *
- * Responsabilités :
- * - Afficher les signalements dans un RecyclerView via ReportAdapter
- * - Observer les données (LiveData) pour mettre la liste à jour automatiquement
- * - Permettre à l'agent de changer le statut d'un signalement
- * - Si l'agent choisit le statut RESOLU : obliger la prise d'une photo (preuve)
- *
- * Architecture MVVM :
- *   - ReportViewModel gère toutes les opérations Room.
- *   - Le Fragment observe le LiveData et délègue les écritures au ViewModel.
- *   - Aucun accès direct au repository dans le Fragment.
+ * - Affiche les signalements dans un RecyclerView (ReportAdapter)
+ * - Un clic ouvre un dialogue de détail (DataBinding : dialog_report_detail.xml)
+ * - L'agent peut passer le statut à EN_COURS, RESOLU (photo obligatoire) ou IGNORE (raison)
  */
 public class ReportsListMunicipalFragment extends Fragment {
 
@@ -53,7 +46,7 @@ public class ReportsListMunicipalFragment extends Fragment {
     /** ViewModel partagé pour les rapports */
     private ReportViewModel viewModel;
 
-    /** Adapter du RecyclerView pour afficher les signalements */
+    /** Adapter du RecyclerView */
     private ReportAdapter adapter;
 
     // ── Flow caméra (preuve RESOLU) ───────────────────────────────────────────
@@ -74,19 +67,18 @@ public class ReportsListMunicipalFragment extends Fragment {
 
         binder = ReportsListMunicipalFragmentBinding.inflate(inflater, container, false);
 
-        // Obtenir le ViewModel
         viewModel = new ViewModelProvider(this).get(ReportViewModel.class);
 
-        // ── RecyclerView + Adapter ─────────────────────────────────────────────
-        adapter = new ReportAdapter(this::showStatusDialog);
+        // RecyclerView + Adapter : un clic ouvre le dialogue de détail
+        adapter = new ReportAdapter(this::showDetailDialog);
         binder.rvReports.setLayoutManager(new LinearLayoutManager(getContext()));
         binder.rvReports.setAdapter(adapter);
 
-        // Observation LiveData — mise à jour automatique à chaque changement Room
+        // Observation LiveData : mise à jour automatique de la liste
         viewModel.getAllReports().observe(getViewLifecycleOwner(),
                 reports -> adapter.submit(reports));
 
-        // ── Launcher caméra (preuve RESOLU) ────────────────────────────────────
+        // Launcher caméra (preuve RESOLU)
         takePictureLauncher = registerForActivityResult(
                 new ActivityResultContracts.TakePicture(),
                 success -> {
@@ -120,14 +112,14 @@ public class ReportsListMunicipalFragment extends Fragment {
     }
 
     /**
-     * Affiche un dialog permettant à l'agent de choisir un statut pour un signalement.
-     *
-     * - Si le statut choisi est RESOLU : force la prise d'une photo (preuve).
-     * - Sinon : simple mise à jour du statut via le ViewModel.
+     * Ouvre le dialogue de détail d'un signalement.
+     * Le XML (dialog_report_detail.xml) affiche les données et gère les clics
+     * grâce au modèle ReportEditModel et aux actions définies ici.
      */
-    private void showStatusDialog(ReportEntity report) {
+    private void showDetailDialog(ReportEntity report) {
         if (report == null) return;
 
+        // Un signalement résolu n'est plus modifiable
         if (report.status == ReportStatus.RESOLU) {
             new AlertDialog.Builder(requireContext())
                     .setTitle("Rapport résolu")
@@ -137,84 +129,60 @@ public class ReportsListMunicipalFragment extends Fragment {
             return;
         }
 
-        ReportStatus[] statuses = ReportStatus.values();
-        String[] labels = new String[statuses.length];
-        int checked = -1;
+        // Binding du dialogue + modèle observable
+        DialogReportDetailBinding b = DialogReportDetailBinding.inflate(
+                LayoutInflater.from(requireContext()));
+        ReportEditModel model = new ReportEditModel(report);
 
-        for (int i = 0; i < statuses.length; i++) {
-            labels[i] = statuses[i].name();
-            if (report.status == statuses[i]) checked = i;
-        }
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(b.getRoot())
+                .setNegativeButton("Fermer", null)
+                .create();
 
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Changer le statut")
-                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+        b.setModel(model);
+        b.setActions(new ReportEditModel.Actions() {
 
-                    ReportStatus chosen = statuses[which];
+            @Override
+            public void onInProgress() {
+                viewModel.updateStatus(report.id, ReportStatus.EN_COURS.name());
+                Toast.makeText(getContext(), "Statut mis à jour : EN_COURS",
+                        Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
 
-                    if (chosen == ReportStatus.RESOLU) {
-                        pendingResolveReport = report;
-                        pendingPhotoUri = createImageUriInFiles();
+            @Override
+            public void onResolve() {
+                // RESOLU : la photo de preuve est obligatoire
+                pendingResolveReport = report;
+                pendingPhotoUri = createImageUriInFiles();
 
-                        if (pendingPhotoUri == null) {
-                            Toast.makeText(getContext(),
-                                    "Impossible de préparer la caméra",
-                                    Toast.LENGTH_SHORT).show();
-                            pendingResolveReport = null;
-                            dialog.dismiss();
-                            return;
-                        }
-
-                        takePictureLauncher.launch(pendingPhotoUri);
-                        dialog.dismiss();
-                        return;
-                    }
-
-                    if (chosen == ReportStatus.IGNORE) {
-                        dialog.dismiss();
-                        showIgnoreReasonDialog(report);
-                        return;
-                    }
-
-                    // Autres statuts : délégation au ViewModel
-                    viewModel.updateStatus(report.id, chosen.name());
-
-                    Toast.makeText(getContext(),
-                            "Statut mis à jour : " + chosen.name(),
+                if (pendingPhotoUri == null) {
+                    Toast.makeText(getContext(), "Impossible de préparer la caméra",
                             Toast.LENGTH_SHORT).show();
+                    pendingResolveReport = null;
+                    return;
+                }
+                dialog.dismiss();
+                takePictureLauncher.launch(pendingPhotoUri);
+            }
 
-                    dialog.dismiss();
-                })
-                .setNegativeButton("Annuler", (d, w) -> d.dismiss())
-                .show();
-    }
+            @Override
+            public void onIgnore(String reason) {
+                // La raison vient du modèle (double binding)
+                String clean = reason == null ? "" : reason.trim();
+                if (clean.isEmpty()) {
+                    Toast.makeText(getContext(), "Veuillez saisir une raison",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                long agentId = SessionManager.getUserId(requireContext());
+                viewModel.ignoreWithReason(report.id, clean, agentId);
+                Toast.makeText(getContext(), "Rapport ignoré", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+            }
+        });
 
-    /**
-     * Affiche un dialog pour saisir la raison d'ignorance avant de confirmer.
-     */
-    private void showIgnoreReasonDialog(ReportEntity report) {
-        EditText etReason = new EditText(requireContext());
-        etReason.setHint("Raison (ex : doublon, faux rapport…)");
-        etReason.setPadding(48, 24, 48, 24);
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Ignorer le rapport")
-                .setMessage("Veuillez indiquer la raison :")
-                .setView(etReason)
-                .setPositiveButton("Confirmer", (d, w) -> {
-                    String reason = etReason.getText().toString().trim();
-                    if (reason.isEmpty()) {
-                        Toast.makeText(getContext(),
-                                "Veuillez saisir une raison", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    long agentId = SessionManager.getUserId(requireContext());
-                    viewModel.ignoreWithReason(report.id, reason, agentId);
-                    Toast.makeText(getContext(),
-                            "Rapport ignoré", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Annuler", null)
-                .show();
+        dialog.show();
     }
 
     /**

@@ -5,31 +5,17 @@ import com.example.citoyenactif.data.local.dao.AgentDao;
 import com.example.citoyenactif.data.local.entity.AgentEntity;
 
 /**
- * Repository responsable de la gestion des agents municipaux.
+ * Repository des agents municipaux.
  *
- * Rôle :
- * - Servir d'intermédiaire entre l'UI (Fragments/Activities) et le DAO Room (AgentDao).
- * - Centraliser l'accès aux données liées aux agents.
- *
- * Remarque :
- * - Les méthodes de ce repository (login/getById) font des requêtes Room.
- * - Elles doivent idéalement être appelées dans un thread secondaire
- *   (ou via Executor/LiveData) pour éviter les accès DB sur le thread UI.
+ * Fait le lien entre l'UI (ViewModel) et le DAO Room (AgentDao).
+ * Ses méthodes font des requêtes Room : à appeler dans un thread secondaire.
  */
 public class AgentRepository {
 
-    /**
-     * DAO Room pour accéder à la table "agents".
-     */
+    /** DAO Room pour la table "agents". */
     private final AgentDao agentDao;
 
-    /**
-     * Constructeur :
-     * - Récupère l'instance unique de la base Room via DatabaseClient
-     * - Récupère le DAO AgentDao pour exécuter les opérations SQL
-     *
-     * @param context contexte Android (on prend généralement applicationContext)
-     */
+    /** Récupère le DAO depuis la base Room de l'application. */
     public AgentRepository() {
         agentDao = CitoyenActifApp.getInstance().getDatabase().agentDao();
     }
@@ -37,20 +23,26 @@ public class AgentRepository {
     /**
      * Vérifie les identifiants d'un agent (numéro + mot de passe).
      *
-     * @param agentNumber numéro d'agent (ex: "AGT-1001")
-     * @param password mot de passe de l'agent
-     * @return AgentEntity si les identifiants sont corrects, sinon null
+     * @return l'agent si les identifiants sont corrects, sinon null
      */
     public AgentEntity login(String agentNumber, String password) {
         return agentDao.login(agentNumber, password);
     }
 
     /**
-     * Récupère un agent par son id.
-     * Utile pour afficher le profil de l'agent connecté.
+     * Cherche un agent par son numéro (sans mot de passe).
+     * Utilisé par la connexion par carte NFC.
      *
-     * @param id identifiant de l'agent (clé primaire)
-     * @return AgentEntity correspondant, ou null si introuvable
+     * @return l'agent trouvé, sinon null
+     */
+    public AgentEntity findByNumber(String agentNumber) {
+        return agentDao.findByAgentNumber(agentNumber);
+    }
+
+    /**
+     * Récupère un agent par son id.
+     *
+     * @return l'agent correspondant, ou null si introuvable
      */
     public AgentEntity getById(long id) {
         return agentDao.getById(id);

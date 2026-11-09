@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <import type="android.view.View" />
+
+        <!-- Modèle observable du dialogue -->
+        <variable
+            name="model"
+            type="com.example.citoyenactif.ui.binding.ReportEditModel" />
+
+        <!-- Actions des boutons (binding d'action) -->
+        <variable
+            name="actions"
+            type="com.example.citoyenactif.ui.binding.ReportEditModel.Actions" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Titre -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{model.report.title}"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="Titre" />
+
+        <!-- Catégorie • Statut • citoyen (BindingAdapter déjà créé) -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12sp"
+            app:reportMeta="@{model.report}"
+            app:showCitizen="@{true}"
+            tools:text="Catégorie • Statut" />
+
+        <!-- Description -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@{model.report.description}"
+            tools:text="Description..." />
+
+        <!-- Boutons de changement de statut -->
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:onClick="@{() -> actions.onInProgress()}"
+            android:text="Marquer EN COURS" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> actions.onResolve()}"
+            android:text="Résoudre (photo de preuve)" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> model.toggleIgnore()}"
+            android:text="Ignorer…" />
+
+        <!-- Champ raison : visible seulement si "Ignorer" est choisi.
+             @={} = double binding : le texte tapé revient dans le modèle. -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Raison (ex : doublon, faux rapport…)"
+            android:inputType="textMultiLine"
+            android:text="@={model.ignoreReason}"
+            android:visibility="@{model.ignoreSelected ? View.VISIBLE : View.GONE}" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> actions.onIgnore(model.ignoreReason)}"
+            android:text="Confirmer l'ignorance"
+            android:visibility="@{model.ignoreSelected ? View.VISIBLE : View.GONE}" />
+
+    </LinearLayout>
+</layout>

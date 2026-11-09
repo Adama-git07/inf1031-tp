@@ -13,18 +13,19 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.citoyenactif.databinding.SignInFragBinding;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
-
+import com.example.citoyenactif.ui.authentification.NfcScanActivity;
 import com.example.citoyenactif.ui.citizen.CitizenPageActivity;
 import com.example.citoyenactif.ui.municipal.MunicipalPageActivity;
 import com.example.citoyenactif.ui.viewmodel.AuthViewModel;
 import com.example.citoyenactif.util.SessionManager;
+import com.example.citoyenactif.ui.authentification.NfcWriteActivity;
 
 /**
  * Fragment de connexion (SignIn).
  *
  * Permet de se connecter soit en tant que :
- * - Citoyen (UserEntity)
- * - Agent municipal (AgentEntity)
+ * - Citoyen (UserEntity) : login + mot de passe
+ * - Agent municipal (AgentEntity) : numéro + mot de passe, OU carte NFC
  *
  * Architecture MVVM :
  * - AuthViewModel gère toutes les opérations Room en arrière-plan.
@@ -63,6 +64,14 @@ public class SignInFrag extends Fragment {
 
         // Clic sur bouton "Connexion"
         binder.btnLogin.setOnClickListener(v -> handleLogin());
+
+        // Bouton "Activer avec ma carte NFC" -> écran de scan
+        binder.btnNfc.setOnClickListener(v ->
+                startActivity(new Intent(requireActivity(), NfcScanActivity.class)));
+
+        // Lien "Programmer une carte d'agent" -> écran d'écriture
+        binder.tvWriteCard.setOnClickListener(v ->
+                startActivity(new Intent(requireActivity(), NfcWriteActivity.class)));
 
         // Lien "Créer un compte" → SignUpFrag
         binder.tvCreateAccount.setOnClickListener(v -> {

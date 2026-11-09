@@ -1,52 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <data>
+        <!-- Le signalement affiché dans cette ligne -->
+        <variable
+            name="report"
+            type="com.example.citoyenactif.data.local.entity.ReportEntity" />
+
+        <!-- Celui qui reçoit le clic (binding d'action) -->
+        <variable
+            name="listener"
+            type="com.example.citoyenactif.ui.municipal.adapter.ReportAdapter.OnReportClickListener" />
+
+        <!-- true côté agent : affiche aussi "citoyen #id" (false par défaut) -->
+        <variable
+            name="showCitizen"
+            type="boolean" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:layout_marginBottom="10dp"
+        android:onClick="@{() -> listener.onReportClick(report)}"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
 
-        <TextView
-            android:id="@+id/tvReportTitle"
-            android:layout_width="0dp"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Titre"
-            android:textStyle="bold"
-            android:textSize="15sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            android:padding="12dp">
 
-        <TextView
-            android:id="@+id/tvReportMeta"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Catégorie • Statut"
-            android:textSize="12sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvReportTitle"
-            android:layout_marginTop="4dp"/>
+            <!-- Titre : lié directement au champ title du signalement -->
+            <TextView
+                android:id="@+id/tvReportTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@{report.title}"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Titre" />
 
-        <TextView
-            android:id="@+id/tvReportDesc"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Description..."
-            android:maxLines="2"
-            android:ellipsize="end"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvReportMeta"
-            android:layout_marginTop="6dp"/>
+            <!-- Ligne "Catégorie • Statut" : calculée par un BindingAdapter -->
+            <TextView
+                android:id="@+id/tvReportMeta"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvReportTitle"
+                app:reportMeta="@{report}"
+                app:showCitizen="@{showCitizen}"
+                tools:text="Catégorie • Statut" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</com.google.android.material.card.MaterialCardView>
+            <!-- Description : liée directement au champ description -->
+            <TextView
+                android:id="@+id/tvReportDesc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:text="@{report.description}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvReportMeta"
+                tools:text="Description..." />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
 </layout>

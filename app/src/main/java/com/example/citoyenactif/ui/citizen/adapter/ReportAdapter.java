@@ -13,77 +13,49 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Adapter RecyclerView pour afficher une liste de rapports (ReportEntity).
+ * Adapter RecyclerView pour afficher la liste des rapports du citoyen.
  *
- * Rôle :
- * - Contenir la liste des reports à afficher
- * - Créer les ViewHolder (inflater item_report.xml)
- * - Binder (remplir) les vues pour chaque report
- * - Remonter les événements de clic (click / long click) au Fragment/Activity
+ * Avec DataBinding, le titre, la description et la ligne "Catégorie • Statut"
+ * sont affichés par le XML (item_report.xml). L'adapter donne seulement le
+ * signalement au layout et branche le clic et l'appui long.
  */
 public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportVH> {
 
-    /**
-     * Callback appelé quand l'utilisateur clique sur un report.
-     * Le fragment/activité peut décider quoi faire (ouvrir détail, etc.)
-     */
+    /** Callback appelé quand l'utilisateur clique sur un report. */
     public interface OnReportClickListener {
         void onClick(ReportEntity report);
     }
 
-    /**
-     * Callback appelé quand l'utilisateur fait un appui long sur un report.
-     * Souvent utilisé pour afficher un menu (supprimer / modifier) ou sélectionner l'item.
-     */
+    /** Callback appelé quand l'utilisateur fait un appui long sur un report. */
     public interface OnReportLongClickListener {
         void onLongClick(ReportEntity report);
     }
 
-    /**
-     * Liste interne des éléments affichés.
-     * On utilise une ArrayList pour pouvoir clear/add facilement.
-     */
+    /** Liste interne des éléments affichés. */
     private final List<ReportEntity> items = new ArrayList<>();
 
-    /**
-     * Listeners fournis depuis l'extérieur (Fragment/Activity) pour gérer les actions utilisateur.
-     */
     private final OnReportClickListener clickListener;
     private final OnReportLongClickListener longClickListener;
 
-    /**
-     * Constructeur : on injecte les listeners.
-     * (Ils peuvent être des lambdas dans le fragment.)
-     */
+    /** Constructeur : on injecte les listeners (lambdas dans le fragment). */
     public ReportAdapter(OnReportClickListener clickListener,
                          OnReportLongClickListener longClickListener) {
         this.clickListener = clickListener;
         this.longClickListener = longClickListener;
     }
 
-    /**
-     * Remplace entièrement la liste actuelle par une nouvelle liste puis rafraîchit le RecyclerView.
-     * notifyDataSetChanged() rafraîchit tout (simple, mais pas le plus performant).
-     */
+    /** Remplace la liste actuelle puis rafraîchit le RecyclerView. */
     public void setItems(List<ReportEntity> newItems) {
         items.clear();
         if (newItems != null) items.addAll(newItems);
         notifyDataSetChanged();
     }
 
-    /**
-     * Retourne l'élément à une position donnée.
-     * Utile pour récupérer un report lors d'un swipe ou d'une action contextuelle.
-     */
+    /** Retourne l'élément à une position donnée. */
     public ReportEntity getItem(int position) {
         return items.get(position);
     }
 
-    /**
-     * Crée le ViewHolder :
-     * - on inflate le layout XML de l'item (item_report.xml via DataBinding)
-     * - on renvoie un ReportVH qui encapsule le binding
-     */
     @NonNull
     @Override
     public ReportVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -93,31 +65,20 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportVH> 
         return new ReportVH(binding);
     }
 
-    /**
-     * Associe (bind) le report à afficher au ViewHolder de la ligne.
-     */
     @Override
     public void onBindViewHolder(@NonNull ReportVH holder, int position) {
         ReportEntity report = items.get(position);
         holder.bind(report, clickListener, longClickListener);
     }
 
-    /**
-     * Indique au RecyclerView combien d'items on a.
-     */
     @Override
     public int getItemCount() {
         return items.size();
     }
 
-    /**
-     * ViewHolder :
-     * - Contient les vues de l'item (via ItemReportBinding)
-     * - Sait comment afficher un ReportEntity dans ces vues
-     */
+    /** ViewHolder : contient le binding de la ligne. */
     static class ReportVH extends RecyclerView.ViewHolder {
 
-        /** Binding généré (accès direct aux vues : tvReportTitle, tvReportMeta, etc.) */
         private final ItemReportBinding binding;
 
         ReportVH(ItemReportBinding binding) {
@@ -125,39 +86,27 @@ public class ReportAdapter extends RecyclerView.Adapter<ReportAdapter.ReportVH> 
             this.binding = binding;
         }
 
-        /**
-         * Remplit la vue avec les données du report + branche les listeners.
-         *
-         * @param report report à afficher
-         * @param clickListener callback clic
-         * @param longClickListener callback appui long
-         */
         void bind(ReportEntity report,
                   OnReportClickListener clickListener,
                   OnReportLongClickListener longClickListener) {
 
-            // --- 1) Affichage du titre du report ---
-            binding.tvReportTitle.setText(report.title != null ? report.title : "");
+            // Le XML affiche titre, description et "Catégorie • Statut"
+            binding.setReport(report);
+            binding.setShowCitizen(false);   // le citoyen n'a pas besoin de voir son propre numéro
 
-            // --- 2) Affichage de la description (Fix #3 : était un placeholder) ---
-            binding.tvReportDesc.setText(report.description != null ? report.description : "");
-
-            // --- 3) Affichage "Catégorie • Statut" ---
-            String category = (report.category != null) ? report.category.name() : "—";
-            String status   = (report.status   != null) ? report.status.name()   : "—";
-            binding.tvReportMeta.setText(category + " \u2022 " + status);
-
-            // --- 3) Clic simple : on délègue au fragment/activité ---
-            binding.getRoot().setOnClickListener(v -> {
-                if (clickListener != null) clickListener.onClick(report);
+            // Clic simple : géré par le binding d'action du layout (on adapte l'interface)
+            binding.setListener(r -> {
+                if (clickListener != null) clickListener.onClick(r);
             });
 
-            // --- 4) Appui long : on délègue aussi ---
-            // return true => l'événement est consommé (on ne déclenche pas aussi le clic simple)
+            // Appui long : on délègue au fragment
+            // return true => l'événement est consommé (pas de clic simple en plus)
             binding.getRoot().setOnLongClickListener(v -> {
                 if (longClickListener != null) longClickListener.onLongClick(report);
                 return true;
             });
+
+            binding.executePendingBindings();
         }
     }
 }

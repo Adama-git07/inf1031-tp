@@ -33,6 +33,18 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
+    <!-- Permissions personnalisées du ContentProvider des rapports -->
+    <permission
+        android:name="com.example.citoyenactif.permission.READ_REPORTS"
+        android:description="@string/perm_read_reports_desc"
+        android:label="@string/perm_read_reports_label"
+        android:protectionLevel="normal" />
+    <permission
+        android:name="com.example.citoyenactif.permission.WRITE_REPORTS"
+        android:description="@string/perm_write_reports_desc"
+        android:label="@string/perm_write_reports_label"
+        android:protectionLevel="dangerous" />
+
     <application
         android:name=".CitoyenActifApp"
         android:allowBackup="true"
@@ -116,6 +128,18 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!--
+            CONTENT PROVIDER — interopérabilité avec les autres applications du citoyen.
+            exported=true : les autres apps peuvent l'appeler, mais seulement avec
+            la permission de lecture (query) ou d'écriture (insert) ci-dessus.
+        -->
+        <provider
+            android:name=".provider.ReportProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="true"
+            android:readPermission="com.example.citoyenactif.permission.READ_REPORTS"
+            android:writePermission="com.example.citoyenactif.permission.WRITE_REPORTS" />
 
     </application>
 

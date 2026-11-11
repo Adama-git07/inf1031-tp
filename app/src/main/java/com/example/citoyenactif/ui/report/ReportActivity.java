@@ -256,7 +256,7 @@ public class ReportActivity extends BaseActivity {
         dto.description.set(report.description != null ? report.description : "");
 
         if (report.category != null) {
-            binding.spCategory.setSelection(report.category.ordinal() + 1);
+            dto.categoryPosition.set(report.category.ordinal() + 1);
         }
 
         // Afficher la localisation enregistrée
@@ -311,7 +311,7 @@ public class ReportActivity extends BaseActivity {
                             if (agent != null) {
                                 binding.tvResolvedByAgent.setText(
                                         "Traité par " + agent.firstName + " " + agent.name
-                                        + " - " + agent.agentNumber);
+                                                + " - " + agent.agentNumber);
                             } else {
                                 binding.tvResolvedByAgent.setText("Traité par un agent inconnu");
                             }
@@ -342,7 +342,7 @@ public class ReportActivity extends BaseActivity {
                             if (agent != null) {
                                 binding.tvIgnoredByAgent.setText(
                                         "Traité par " + agent.firstName + " " + agent.name
-                                        + " - " + agent.agentNumber);
+                                                + " - " + agent.agentNumber);
                             } else {
                                 binding.tvIgnoredByAgent.setText("Traité par un agent inconnu");
                             }
@@ -390,7 +390,7 @@ public class ReportActivity extends BaseActivity {
     private void saveNewReport() {
         if (!validateFields()) return;
 
-        int pos = binding.spCategory.getSelectedItemPosition();
+        int pos = dto.categoryPosition.get();
         dto.category  = ReportCategory.values()[pos - 1];
         dto.photoUris = new ArrayList<>(photoUris);
         dto.citizenId = (int) SessionManager.getUserId(this);
@@ -404,7 +404,7 @@ public class ReportActivity extends BaseActivity {
     private void updateReport() {
         if (!validateFields()) return;
 
-        int pos = binding.spCategory.getSelectedItemPosition();
+        int pos = dto.categoryPosition.get();
         if (pos == 0) { toast("Veuillez choisir une catégorie"); return; }
 
         currentReport.title       = dto.title.get();
@@ -431,7 +431,7 @@ public class ReportActivity extends BaseActivity {
         if (title.isEmpty()) { toast("Veuillez saisir un titre"); return false; }
         if (desc.isEmpty())  { toast("Veuillez saisir une description"); return false; }
 
-        int pos = binding.spCategory.getSelectedItemPosition();
+        int pos = dto.categoryPosition.get();
         if (pos == 0) { toast("Veuillez choisir une catégorie"); return false; }
 
         if (mode == MODE_CREATE && photoUris.isEmpty()) {

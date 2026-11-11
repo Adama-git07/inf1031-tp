@@ -11,6 +11,8 @@ import androidx.room.Room;
 
 import android.util.Log;
 import com.example.citoyenactif.util.SeedData;
+import com.example.citoyenactif.util.SessionManager;
+import com.example.citoyenactif.service.CitoyenMessagingService;
 
 import com.example.citoyenactif.data.local.database.DataBase;
 import com.example.citoyenactif.data.local.database.DatabaseClient;
@@ -52,17 +54,15 @@ public class CitoyenActifApp extends MultiDexApplication
         instance = this;
 
         // Initialisation de Room avec toutes les migrations
-        database = Room.databaseBuilder(this, DataBase.class, "citoyen_actif_db")
-                .addMigrations(
-                        DatabaseClient.MIGRATION_1_2,
-                        DatabaseClient.MIGRATION_2_3,
-                        DatabaseClient.MIGRATION_3_4,
-                        DatabaseClient.MIGRATION_4_5
-                )
-                .build();
+        // (instance partagée avec le ContentProvider et le Worker : voir DatabaseClient)
+        database = DatabaseClient.getInstance(this);
 
         // Enregistrement des callbacks du cycle de vie des activités
         registerActivityLifecycleCallbacks(this);
+
+        // Canal de notification créé dès le démarrage : nécessaire pour que les
+        // notifications FCM reçues en arrière-plan utilisent notre canal (Android 8+)
+        CitoyenMessagingService.createNotificationChannel(this);
 
         // Insertion des données par défaut (agents + rapports de démonstration)
         SeedData.seedAgents();
@@ -76,8 +76,10 @@ public class CitoyenActifApp extends MultiDexApplication
         Log.d("FCM_TOKEN", "Tentative de récupération du token FCM...");
         FirebaseMessaging.getInstance().getToken()
                 .addOnSuccessListener(token -> {
-                        Log.d("FCM_TOKEN", "Token FCM : " + token);
-                        Log.d("FCM_TOKEN", "=== COPIEZ CE TOKEN POUR TESTER ===");
+                    // Gardé localement : joint à chaque rapport créé (voir FirestoreRepository)
+                    SessionManager.saveFcmToken(this, token);
+                    Log.d("FCM_TOKEN", "Token FCM : " + token);
+                    Log.d("FCM_TOKEN", "=== COPIEZ CE TOKEN POUR TESTER ===");
                 })
                 .addOnFailureListener(e ->
                         Log.e("FCM_TOKEN", "Impossible d'obtenir le token FCM — cause : " + e.getMessage(), e));
@@ -140,3 +142,4 @@ public class CitoyenActifApp extends MultiDexApplication
     @Override public void onActivitySaveInstanceState(@NonNull Activity activity,
                                                       @NonNull Bundle outState) {}
 }
+

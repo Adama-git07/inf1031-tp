@@ -2,7 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data />
+    <data>
+        <import type="android.view.View" />
+        <variable
+            name="dto"
+            type="com.example.citoyenactif.model.dto.SignInFormDTO" />
+    </data>
 
     <!-- Fond vert UQTR -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -117,7 +122,7 @@
                         android:text="Citoyen"
                         android:textColor="@color/text_primary"
                         android:buttonTint="@color/uqtr_green"
-                        android:checked="true" />
+                        android:checked="@{!dto.agent}" />
 
                     <RadioButton
                         android:id="@+id/rbAgent"
@@ -126,12 +131,14 @@
                         android:text="Agent municipal"
                         android:textColor="@color/text_primary"
                         android:buttonTint="@color/uqtr_green"
-                        android:layout_marginStart="24dp" />
+                        android:layout_marginStart="24dp"
+                        android:checked="@={dto.agent}" />
                 </RadioGroup>
 
                 <!-- ── Formulaire Citoyen ── -->
                 <LinearLayout
                     android:id="@+id/citizenForm"
+                    android:visibility="@{dto.agent ? View.GONE : View.VISIBLE}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
@@ -147,6 +154,7 @@
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etUsername"
+                            android:text="@={dto.username}"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textEmailAddress" />
@@ -166,6 +174,7 @@
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etPassword"
+                            android:text="@={dto.password}"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textPassword" />
@@ -179,7 +188,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:visibility="gone">
+                    android:visibility="@{dto.agent ? View.VISIBLE : View.GONE}">
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilAgentNumber"
@@ -192,6 +201,7 @@
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etAgentNumber"
+                            android:text="@={dto.agentNumber}"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text" />
@@ -211,6 +221,7 @@
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etAgentPassword"
+                            android:text="@={dto.agentPassword}"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textPassword" />

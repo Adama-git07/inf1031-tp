@@ -70,6 +70,9 @@ dependencies {
     // FCM — notifications push (bonus +5)
     implementation("com.google.firebase:firebase-messaging")
 
+    // WorkManager — synchronisation périodique (15 min) des rapports côté agents
+    implementation("androidx.work:work-runtime:2.10.5")
+
     // Retrofit + OkHttp + Gson
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

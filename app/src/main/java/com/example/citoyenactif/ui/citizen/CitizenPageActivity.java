@@ -1,5 +1,7 @@
 package com.example.citoyenactif.ui.citizen;
 
+import android.Manifest;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -15,11 +17,9 @@ import com.example.citoyenactif.ui.citizen.fragment.ReportsListFragment;
 
 /**
  * CitizenPageActivity est la page principale côté citoyen.
- *
  * Elle contient :
  * - Un FragmentContainerView (conteneur)
  * - Un BottomNavigationView (menu)
- *
  * Elle charge les fragments suivants :
  * - ReportsListFragment (liste des rapports)
  * - ReportMapFragment (carte des rapports)
@@ -35,6 +35,10 @@ public class CitizenPageActivity extends BaseActivity {
 
         // DataBinding : citizen_page_activity.xml
         binder = DataBindingUtil.setContentView(this, R.layout.citizen_page_activity);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && !hasPermission(Manifest.permission.POST_NOTIFICATIONS)) {
+            requestPermissions(Manifest.permission.POST_NOTIFICATIONS);
+        }
 
         // Charger le fragment par défaut uniquement au premier lancement
         if (savedInstanceState == null) {
@@ -63,7 +67,6 @@ public class CitizenPageActivity extends BaseActivity {
 
     /**
      * Charge un fragment dans le conteneur principal.
-     *
      * @param frag fragment à afficher
      */
     private void push(Fragment frag) {

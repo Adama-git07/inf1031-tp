@@ -2,20 +2,27 @@ package com.example.citoyenactif.data.remote;
 
 import android.util.Log;
 
+import com.example.citoyenactif.CitoyenActifApp;
+import com.example.citoyenactif.util.SessionManager;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.firestore.QuerySnapshot;
+
 import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.model.enums.ReportCategory;
 import com.example.citoyenactif.model.enums.ReportStatus;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
  * Couche d'accès à Firestore — source de vérité côté serveur.
- *
  * Stratégie de synchronisation :
  *   - Room  = cache local (fonctionne hors ligne)
  *   - Firestore = cloud (partagé entre tous les appareils)
@@ -42,7 +49,6 @@ public class FirestoreRepository {
     /**
      * Crée ou met à jour un document rapport dans Firestore.
      * Appelé après chaque insertion/modification dans Room.
-     *
      * @param report entité Room à synchroniser (doit avoir un id > 0)
      */
     public void pushReport(ReportEntity report) {
@@ -58,7 +64,6 @@ public class FirestoreRepository {
 
     /**
      * Met à jour uniquement le statut d'un rapport dans Firestore.
-     *
      * @param reportId id Room du rapport
      * @param status   nouveau statut (ex: "RESOLU")
      */
@@ -113,7 +118,6 @@ public class FirestoreRepository {
 
     /**
      * Supprime un document rapport de Firestore.
-     *
      * @param reportId id Room du rapport à supprimer
      */
     public void deleteReport(long reportId) {
@@ -132,10 +136,8 @@ public class FirestoreRepository {
     /**
      * Télécharge tous les rapports depuis Firestore et les insère dans Room
      * via le callback fourni.
-     *
      * Appelé au démarrage de l'application pour s'assurer que Room contient
      * les données des autres appareils.
-     *
      * @param callback appelé pour chaque rapport Firestore à insérer/mettre à jour dans Room
      */
     public void pullAllReports(OnReportPulledCallback callback) {
@@ -152,6 +154,26 @@ public class FirestoreRepository {
                 })
                 .addOnFailureListener(e ->
                         Log.e(TAG, "Erreur pull Firestore", e));
+    }
+
+    /**
+     * Version BLOQUANTE de pullAllReports, pour le Worker WorkManager.
+     * @return tous les rapports Firestore convertis en ReportEntity
+     * @throws ExecutionException   si la requête Firestore échoue (réseau, règles...)
+     * @throws InterruptedException si le thread est interrompu (Worker arrêté)
+     */
+    public List<ReportEntity> pullAllReportsBlocking()
+            throws ExecutionException, InterruptedException {
+        QuerySnapshot snapshot = Tasks.await(db.collection(COLLECTION).get());
+        List<ReportEntity> reports = new ArrayList<>();
+        for (QueryDocumentSnapshot doc : snapshot) {
+            ReportEntity report = fromDocument(doc);
+            if (report != null) {
+                reports.add(report);
+            }
+        }
+        Log.d(TAG, "Pull bloquant : " + reports.size() + " rapport(s)");
+        return reports;
     }
 
     /**
@@ -182,6 +204,12 @@ public class FirestoreRepository {
         map.put("resolvedPhotoUri",  r.resolvedPhotoUri);
         map.put("resolvedByAgentId", r.resolvedByAgentId);
         map.put("ignoreReason",      r.ignoreReason);
+
+        // Token FCM de l'appareil du citoyen : sert à le notifier quand un agent traite son rapport
+        String fcmToken = SessionManager.getFcmToken(CitoyenActifApp.getInstance());
+        if (fcmToken != null) {
+            map.put("fcmToken", fcmToken);
+        }
         return map;
     }
 

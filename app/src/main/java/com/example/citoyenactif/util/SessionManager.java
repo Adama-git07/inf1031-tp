@@ -40,7 +40,6 @@ public class SessionManager {
 
     /**
      * Connecte anonymement l'utilisateur à Firebase Authentication.
-     *
      * Cela est nécessaire pour que les règles de sécurité Firestore
      * acceptent les opérations de lecture/écriture (require auth != null).
      * Si une session Firebase anonyme existe déjà, aucune nouvelle connexion n'est créée.
@@ -62,9 +61,6 @@ public class SessionManager {
      * Sauvegarde la session d'un citoyen après une connexion réussie.
      * Déclenche aussi une authentification anonyme Firebase pour autoriser
      * les écritures Firestore.
-     *
-     * @param context contexte de l'application
-     * @param userId identifiant du citoyen dans la base de données
      */
     public static void saveCitizen(Context context, long userId) {
         SharedPreferences sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
@@ -79,13 +75,9 @@ public class SessionManager {
      * Sauvegarde la session d'un agent après authentification.
      * Déclenche aussi une authentification anonyme Firebase pour autoriser
      * les écritures Firestore.
-     *
      * Contrairement au citoyen, l'identifiant de l'agent est
      * également sauvegardé afin de pouvoir récupérer ses informations
      * plus tard dans l'application (profil, interventions, etc.).
-     *
-     * @param context contexte de l'application
-     * @param agentId identifiant unique de l'agent dans la base de données
      */
     public static void saveAgent(Context context, long agentId) {
         SharedPreferences sp = context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
@@ -97,10 +89,28 @@ public class SessionManager {
     }
 
     /**
+     * Fichier séparé de la session : SessionManager.clear() (déconnexion) ne doit pas
+     * effacer le token FCM, qui appartient à l'appareil et non à l'utilisateur.
+     */
+    private static final String PREF_FCM = "citoyen_actif_fcm";
+    private static final String KEY_FCM_TOKEN = "fcm_token";
+
+    /** Mémorise le token FCM de cet appareil. */
+    public static void saveFcmToken(Context context, String token) {
+        context.getSharedPreferences(PREF_FCM, Context.MODE_PRIVATE)
+                .edit()
+                .putString(KEY_FCM_TOKEN, token)
+                .apply();
+    }
+
+    /** @return le token FCM de cet appareil, ou null s'il n'est pas encore connu. */
+    public static String getFcmToken(Context context) {
+        return context.getSharedPreferences(PREF_FCM, Context.MODE_PRIVATE)
+                .getString(KEY_FCM_TOKEN, null);
+    }
+
+    /**
      * Récupère l'identifiant de l'utilisateur actuellement connecté.
-     *
-     * @param context contexte de l'application
-     * @return l'identifiant utilisateur si présent, sinon -1
      */
     public static long getUserId(Context context) {
         return context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
@@ -109,9 +119,6 @@ public class SessionManager {
 
     /**
      * Vérifie si l'utilisateur connecté est un agent.
-     *
-     * @param context contexte de l'application
-     * @return true si l'utilisateur est un agent, false sinon
      */
     public static boolean isAgent(Context context) {
         return context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
@@ -121,11 +128,6 @@ public class SessionManager {
     /**
      * Supprime les informations de session stockées et déconnecte
      * l'utilisateur de Firebase Authentication.
-     *
-     * Cette méthode est généralement utilisée lors de la
-     * déconnexion de l'utilisateur afin d'effacer toutes
-     * les données de session enregistrées.
-     *
      * @param context contexte de l'application
      */
     public static void clear(Context context) {

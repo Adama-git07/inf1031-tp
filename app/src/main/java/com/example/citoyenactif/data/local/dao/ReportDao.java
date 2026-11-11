@@ -1,5 +1,7 @@
 package com.example.citoyenactif.data.local.dao;
 
+import android.database.Cursor;
+
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -12,13 +14,6 @@ import com.example.citoyenactif.data.local.entity.ReportEntity;
 
 import java.util.List;
 
-/**
- * DAO (Data Access Object) Room pour la table "reports".
- *
- * Rôle :
- * - Définir toutes les opérations SQL autorisées sur les rapports :
- *   insertion, mise à jour, suppression, et requêtes de lecture.
- */
 @Dao
 public interface ReportDao {
 
@@ -31,37 +26,16 @@ public interface ReportDao {
      */
     @Insert
     long insert(ReportEntity report);
-
-    /**
-     * Insère ou remplace un rapport (utilisé lors du pull depuis Firestore).
-     * Si un rapport avec le même ID existe déjà, il est écrasé.
-     *
-     * @param report rapport reçu de Firestore
-     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOrReplace(ReportEntity report);
-
-    /**
-     * Met à jour toutes les colonnes d'un rapport existant.
-     * @param report rapport avec un id existant
-     */
     @Update
     void update(ReportEntity report);
-
-    /**
-     * Supprime un rapport de la base.
-     * @param report rapport à supprimer
-     */
     @Delete
     void delete(ReportEntity report);
 
     /**
      * Retourne (en LiveData) la liste des rapports d'un citoyen (filtrés par citizen_id),
      * triés par date de création décroissante.
-     *
-     * - citizen_id correspond à @ColumnInfo(name="citizen_id") dans ReportEntity.
-     * - created_at correspond à @ColumnInfo(name="created_at") dans ReportEntity.
-     *
      * @param citizenId id du citoyen
      * @return LiveData liste de rapports (mise à jour automatiquement)
      */
@@ -70,8 +44,6 @@ public interface ReportDao {
 
     /**
      * Retourne (en LiveData) tous les rapports, triés du plus récent au plus ancien.
-     * Utile surtout pour la vue municipale (agents).
-     *
      * @return LiveData liste complète des rapports
      */
     @Query("SELECT * FROM reports ORDER BY created_at DESC")
@@ -79,11 +51,6 @@ public interface ReportDao {
 
     /**
      * Retourne (en LiveData) uniquement les rapports en attente.
-     *
-     * Ici tu filtres directement par la chaîne 'EN_ATTENTE'.
-     * Cela suppose que ReportStatus est stocké en String (via TypeConverter),
-     * et que la valeur en DB est exactement "EN_ATTENTE".
-     *
      * @return LiveData liste des rapports en attente
      */
     @Query("SELECT * FROM reports WHERE status = 'EN_ATTENTE' ORDER BY created_at DESC")
@@ -133,4 +100,20 @@ public interface ReportDao {
      */
     @Query("SELECT COUNT(*) FROM reports")
     int countReports();
+
+    // ── Requêtes pour le ContentProvider (retournent un Cursor) ───────────────
+    // Colonnes volontairement limitées : citizen_id, photos et agent ne sont pas
+    // exposés aux autres applications. "id AS _id" est la convention Android.
+
+    @Query("SELECT id AS _id, title, description, category, status, latitude, longitude, created_at "
+            + "FROM reports ORDER BY created_at DESC")
+    Cursor getAllCursor();
+
+    @Query("SELECT id AS _id, title, description, category, status, latitude, longitude, created_at "
+            + "FROM reports WHERE status = :status ORDER BY created_at DESC")
+    Cursor getByStatusCursor(String status);
+
+    @Query("SELECT id AS _id, title, description, category, status, latitude, longitude, created_at "
+            + "FROM reports WHERE id = :id LIMIT 1")
+    Cursor getByIdCursor(long id);
 }

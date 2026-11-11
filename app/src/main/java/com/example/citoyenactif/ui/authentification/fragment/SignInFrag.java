@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.citoyenactif.databinding.SignInFragBinding;
+import com.example.citoyenactif.model.dto.SignInFormDTO;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
 import com.example.citoyenactif.ui.authentification.NfcScanActivity;
 import com.example.citoyenactif.ui.citizen.CitizenPageActivity;
@@ -40,6 +41,9 @@ public class SignInFrag extends Fragment {
     /** ViewModel partagé pour toutes les opérations d'authentification */
     private AuthViewModel viewModel;
 
+    /** Formulaire lié au layout en double binding (@={dto.xxx}) : plus aucun getText() */
+    private final SignInFormDTO dto = new SignInFormDTO();
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
@@ -50,17 +54,10 @@ public class SignInFrag extends Fragment {
         // Obtenir le ViewModel (survit aux rotations d'écran)
         viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
-        // Écran par défaut : formulaire citoyen visible
-        showCitizenForm();
-
-        // Écoute du changement Citoyen / Agent
-        binder.rgAccountType.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == binder.rbCitizen.getId()) {
-                showCitizenForm();
-            } else if (checkedId == binder.rbAgent.getId()) {
-                showAgentForm();
-            }
-        });
+        // Liaison du formulaire : saisie, choix Citoyen/Agent et visibilité des deux
+        // formulaires sont gérés par le binding (voir sign_in_frag.xml)
+        binder.setDto(dto);
+        binder.setLifecycleOwner(getViewLifecycleOwner());
 
         // Clic sur bouton "Connexion"
         binder.btnLogin.setOnClickListener(v -> handleLogin());
@@ -115,31 +112,10 @@ public class SignInFrag extends Fragment {
     }
 
     /**
-     * Affiche le formulaire citoyen et masque celui de l'agent.
-     */
-    private void showCitizenForm() {
-        binder.citizenForm.setVisibility(View.VISIBLE);
-        binder.agentForm.setVisibility(View.GONE);
-        binder.etAgentNumber.setText("");
-        binder.etAgentPassword.setText("");
-    }
-
-    /**
-     * Affiche le formulaire agent et masque celui du citoyen.
-     */
-    private void showAgentForm() {
-        binder.citizenForm.setVisibility(View.GONE);
-        binder.agentForm.setVisibility(View.VISIBLE);
-        binder.etUsername.setText("");
-        binder.etPassword.setText("");
-    }
-
-    /**
-     * Détermine quel type de connexion effectuer selon le RadioButton sélectionné.
+     * Détermine quel type de connexion effectuer selon le choix du formulaire (dto.agent).
      */
     private void handleLogin() {
-        boolean isAgent = binder.rgAccountType.getCheckedRadioButtonId() == binder.rbAgent.getId();
-        if (isAgent) {
+        if (dto.agent.get()) {
             loginAgent();
         } else {
             loginCitizen();
@@ -147,11 +123,11 @@ public class SignInFrag extends Fragment {
     }
 
     /**
-     * Connexion citoyen : valide les champs et délègue au ViewModel.
+     * Connexion citoyen : valide les champs du DTO et délègue au ViewModel.
      */
     private void loginCitizen() {
-        String login    = binder.etUsername.getText().toString().trim();
-        String password = binder.etPassword.getText().toString().trim();
+        String login    = clean(dto.username.get());
+        String password = clean(dto.password.get());
 
         if (login.isEmpty() || password.isEmpty()) {
             Toast.makeText(getContext(), "Veuillez entrer vos identifiants", Toast.LENGTH_SHORT).show();
@@ -163,11 +139,11 @@ public class SignInFrag extends Fragment {
     }
 
     /**
-     * Connexion agent : valide les champs et délègue au ViewModel.
+     * Connexion agent : valide les champs du DTO et délègue au ViewModel.
      */
     private void loginAgent() {
-        String agentNumber = binder.etAgentNumber.getText().toString().trim();
-        String password    = binder.etAgentPassword.getText().toString().trim();
+        String agentNumber = clean(dto.agentNumber.get());
+        String password    = clean(dto.agentPassword.get());
 
         if (agentNumber.isEmpty() || password.isEmpty()) {
             Toast.makeText(getContext(), "Veuillez entrer vos identifiants agent", Toast.LENGTH_SHORT).show();
@@ -176,6 +152,11 @@ public class SignInFrag extends Fragment {
 
         // Délégation au ViewModel — aucun Thread ici
         viewModel.loginAgent(agentNumber, password);
+    }
+
+    /** Valeur d'un champ sans espaces ; chaîne vide si null. */
+    private static String clean(String value) {
+        return value == null ? "" : value.trim();
     }
 
     @Override

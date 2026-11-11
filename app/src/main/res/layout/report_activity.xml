@@ -78,7 +78,8 @@
                     android:id="@+id/spCategory"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:entries="@array/report_categories" />
+                    android:entries="@array/report_categories"
+                    android:selectedItemPosition="@={dto.categoryPosition}" />
 
             </com.google.android.material.textfield.TextInputLayout>
 

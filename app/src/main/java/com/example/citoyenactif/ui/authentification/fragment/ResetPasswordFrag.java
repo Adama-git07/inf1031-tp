@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.citoyenactif.databinding.ResetPasswordFragBinding;
+import com.example.citoyenactif.model.dto.ResetPasswordDTO;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
 import com.example.citoyenactif.ui.viewmodel.AuthViewModel;
 
@@ -35,12 +36,19 @@ public class ResetPasswordFrag extends Fragment {
     /** ViewModel partagé pour toutes les opérations d'authentification */
     private AuthViewModel viewModel;
 
+    /** Champs liés au layout en double binding (@={dto.xxx}) : plus aucun getText() */
+    private final ResetPasswordDTO dto = new ResetPasswordDTO();
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container,
                              Bundle savedInstanceState) {
 
         binder = ResetPasswordFragBinding.inflate(inflater, container, false);
+
+        // Liaison du DTO au layout
+        binder.setDto(dto);
+        binder.setLifecycleOwner(getViewLifecycleOwner());
 
         // Obtenir le ViewModel
         viewModel = new ViewModelProvider(this).get(AuthViewModel.class);
@@ -70,9 +78,9 @@ public class ResetPasswordFrag extends Fragment {
      * Vérifie les champs et délègue la réinitialisation au ViewModel.
      */
     private void resetPassword() {
-        String username        = binder.username.getText().toString().trim();
-        String password        = binder.password.getText().toString().trim();
-        String confirmPassword = binder.confirmPassword.getText().toString().trim();
+        String username        = clean(dto.username.get());
+        String password        = clean(dto.password.get());
+        String confirmPassword = clean(dto.confirmPassword.get());
 
         if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             Toast.makeText(getContext(), "Veuillez remplir tous les champs", Toast.LENGTH_SHORT).show();
@@ -86,6 +94,11 @@ public class ResetPasswordFrag extends Fragment {
 
         // Délégation au ViewModel — aucun Thread ici
         viewModel.resetPassword(username, password);
+    }
+
+    /** Valeur d'un champ sans espaces ; chaîne vide si null. */
+    private static String clean(String value) {
+        return value == null ? "" : value.trim();
     }
 
     @Override

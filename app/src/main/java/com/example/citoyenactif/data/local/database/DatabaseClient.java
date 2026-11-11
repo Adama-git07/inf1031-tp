@@ -1,24 +1,20 @@
 package com.example.citoyenactif.data.local.database;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
+import androidx.room.Room;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 /**
  * DatabaseClient :
  * Contient uniquement les migrations Room.
- * L'instance de la base est désormais gérée par {@link com.example.citoyenactif.CitoyenActifApp}.
  */
 public class DatabaseClient {
 
     // MIGRATION 1 -> 2 : ajout de la table agents
-    /**
-     * Migration de la version 1 vers la version 2.
-     * Objectif : créer la table "agents" + index unique sur agentNumber.
-     *
-     * NOTE : Room appelle cette migration automatiquement lors d'un upgrade
-     * si l'appli a déjà une BD en version 1 sur l'appareil.
-     */
+
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
@@ -43,18 +39,6 @@ public class DatabaseClient {
     };
 
     // MIGRATION 2 -> 3 : ajout de la table reports
-    /**
-     * Migration de la version 2 vers la version 3.
-     * Objectif : créer la table "reports" + index utiles (createdByUserId, status, category).
-     *
-     * - photo_uri, citizen_id, created_at, resolvedPhotoUri...
-     * alors qu'ici tu crées :
-     * - photoPath, createdByUserId, createdAt...
-     *
-     * Si tu as déjà une BD sur l'appareil, ce décalage peut provoquer :
-     * "Room cannot verify the data integrity..."
-     * => Il faut aligner la migration avec la vraie Entity (ou créer une nouvelle migration 3->4).
-     */
     public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
@@ -103,6 +87,26 @@ public class DatabaseClient {
             database.execSQL("ALTER TABLE reports ADD COLUMN ignore_reason TEXT");
         }
     };
+
+    // ── Instance unique de la base ─────────────────────────────────────────────
+    private static volatile DataBase instance;
+
+    /**
+     * Retourne l'unique instance Room (créée au premier appel).
+     */
+    public static DataBase getInstance(Context context) {
+        if (instance == null) {
+            synchronized (DatabaseClient.class) {
+                if (instance == null) {
+                    instance = Room.databaseBuilder(
+                                    context.getApplicationContext(), DataBase.class, "citoyen_actif_db")
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                            .build();
+                }
+            }
+        }
+        return instance;
+    }
 
     private DatabaseClient() {}
 }

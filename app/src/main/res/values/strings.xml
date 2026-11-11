@@ -17,4 +17,10 @@
         <item>Aqueduc</item>
         <item>Autre</item>
     </string-array>
+
+    <!-- Permissions du ContentProvider -->
+    <string name="perm_read_reports_label">Lire les signalements Citoyen Actif</string>
+    <string name="perm_read_reports_desc">Permet à lapplication de consulter les signalements de bris (titre, catégorie, statut, position).</string>
+    <string name="perm_write_reports_label">Créer des signalements Citoyen Actif</string>
+    <string name="perm_write_reports_desc">Permet à lapplication de soumettre un nouveau signalement de bris au nom du citoyen.</string>
 </resources>

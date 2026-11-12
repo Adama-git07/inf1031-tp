@@ -2,7 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data />
+    <data>
+        <!-- Textes du profil : les TextView se remplissent avec @{profile.xxx} -->
+        <variable
+            name="profile"
+            type="com.example.citoyenactif.ui.binding.ProfileUiModel" />
+    </data>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -25,7 +30,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <!-- ── Carte Avatar + Nom ─────────────────────────────────────── -->
+            <!-- Carte Avatar + Nom -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardAvatar"
                 android:layout_width="0dp"
@@ -55,7 +60,7 @@
                         android:background="#E3F2FD"
                         android:padding="12dp" />
 
-                    <!-- Nom + username -->
+                    <!-- Nom + username + rôle -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_weight="1"
@@ -67,7 +72,7 @@
                             android:id="@+id/tvFullName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Nom Prénom"
+                            android:text="@{profile.fullName}"
                             android:textStyle="bold"
                             android:textSize="20sp" />
 
@@ -75,7 +80,7 @@
                             android:id="@+id/tvUsername"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@username"
+                            android:text="@{profile.username}"
                             android:textColor="#757575"
                             android:layout_marginTop="4dp" />
 
@@ -83,7 +88,7 @@
                             android:id="@+id/tvRole"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Citoyen"
+                            android:text="@{profile.roleLabel}"
                             android:textColor="#1976D2"
                             android:textStyle="bold"
                             android:layout_marginTop="4dp" />
@@ -94,7 +99,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ── Carte Détails ──────────────────────────────────────────── -->
+            <!-- Carte Détails -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardDetails"
                 android:layout_width="0dp"
@@ -123,12 +128,15 @@
                         android:layout_marginBottom="12dp" />
 
                     <!-- Email -->
-                    <LinearLayout android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:layout_marginBottom="10dp">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/baseline_person_24"
                             android:contentDescription="email" />
                         <TextView
@@ -136,17 +144,20 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="email@exemple.com"
+                            android:text="@{profile.email}"
                             android:layout_marginStart="12dp" />
                     </LinearLayout>
 
                     <!-- Téléphone -->
-                    <LinearLayout android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:layout_marginBottom="10dp">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/baseline_person_24"
                             android:contentDescription="phone" />
                         <TextView
@@ -154,17 +165,20 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="—"
+                            android:text="@{profile.phone}"
                             android:layout_marginStart="12dp" />
                     </LinearLayout>
 
                     <!-- Adresse -->
-                    <LinearLayout android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:layout_marginBottom="10dp">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/baseline_menu_24"
                             android:contentDescription="address" />
                         <TextView
@@ -172,16 +186,19 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="—"
+                            android:text="@{profile.address}"
                             android:layout_marginStart="12dp" />
                     </LinearLayout>
 
                     <!-- Date de création du compte -->
-                    <LinearLayout android:layout_width="match_parent"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
-                        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/baseline_menu_24"
                             android:contentDescription="date" />
                         <TextView
@@ -189,7 +206,7 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="Compte créé : —"
+                            android:text="@{profile.createdAt}"
                             android:layout_marginStart="12dp" />
                     </LinearLayout>
 

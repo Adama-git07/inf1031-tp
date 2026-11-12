@@ -8,13 +8,13 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.citoyenactif.databinding.ProfileFragmentBinding;
 import com.example.citoyenactif.model.enums.UserRoles;
 import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
+import com.example.citoyenactif.ui.binding.ProfileUiModel;
 import com.example.citoyenactif.ui.viewmodel.ProfileViewModel;
 import com.example.citoyenactif.util.SessionManager;
 
@@ -25,14 +25,14 @@ import java.util.Locale;
 /**
  * Fragment Profil citoyen (afficher les informations).
  *
- * Affiche tous les champs de l'utilisateur :
- *   - Nom complet (prénom + nom), username, rôle
- *   - Email, téléphone, adresse, date de création
+ * Utilise DataBinding :
+ *   - Le layout profile_fragment.xml déclare <variable name="profile"/>
+ *   - Les textes se remplissent avec @{profile.xxx}
+ *   - Le Fragment prépare les textes dans un ProfileUiModel, sans setText()
  *
  * Architecture MVVM :
  *   - ProfileViewModel charge l'utilisateur depuis Room en arrière-plan.
- *   - Le Fragment observe le LiveData et peuple les vues.
- *   - Aucun accès direct au repository ni création de Thread dans le Fragment.
+ *   - Le Fragment observe le LiveData et donne le modèle au binding.
  */
 public class ProfilFragment extends Fragment {
 
@@ -47,13 +47,14 @@ public class ProfilFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         binder = ProfileFragmentBinding.inflate(inflater, container, false);
+        binder.setLifecycleOwner(getViewLifecycleOwner());
 
         // Obtenir le ViewModel
         viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
 
         binder.btnLogout.setOnClickListener(v -> logout());
 
-        // ── Observation des données utilisateur ───────────────────────────────
+        // Quand l'utilisateur est chargé, on prépare les textes et on les donne au layout
         viewModel.getUser().observe(getViewLifecycleOwner(), user -> {
             if (user == null) {
                 Toast.makeText(getContext(), "Utilisateur introuvable", Toast.LENGTH_SHORT).show();
@@ -61,30 +62,29 @@ public class ProfilFragment extends Fragment {
                 return;
             }
 
-            // ── Carte 1 : Avatar + Nom ────────────────────────────────────────
+            // Nom complet (ou username si vide)
             String firstName = user.firstName != null ? user.firstName : "";
             String lastName  = user.lastName  != null ? user.lastName  : "";
             String fullName  = (firstName + " " + lastName).trim();
             if (fullName.isEmpty()) fullName = user.username;
-            binder.tvFullName.setText(fullName);
-
-            binder.tvUsername.setText("@" + user.username);
 
             String roleLabel = (user.role == UserRoles.CITIZEN) ? "Citoyen" : "Agent municipal";
-            binder.tvRole.setText(roleLabel);
-
-            // ── Carte 2 : Détails ─────────────────────────────────────────────
-            binder.tvEmail.setText(user.email != null ? user.email : "—");
-            binder.tvPhone.setText(
-                    (user.phone != null && !user.phone.isEmpty()) ? user.phone : "—"
-            );
-            binder.tvAddress.setText(
-                    (user.address != null && !user.address.isEmpty()) ? user.address : "—"
-            );
 
             String date = new SimpleDateFormat("dd MMMM yyyy", Locale.FRENCH)
                     .format(new Date(user.createdAt));
-            binder.tvCreatedAt.setText("Membre depuis le " + date);
+
+            ProfileUiModel profile = new ProfileUiModel(
+                    fullName,
+                    "@" + user.username,
+                    roleLabel,
+                    user.email != null ? user.email : "—",
+                    (user.phone != null && !user.phone.isEmpty()) ? user.phone : "—",
+                    (user.address != null && !user.address.isEmpty()) ? user.address : "—",
+                    "Membre depuis le " + date
+            );
+
+            // Une seule ligne : le layout met tous les textes à jour
+            binder.setProfile(profile);
         });
 
         // Déclencher le chargement
@@ -105,7 +105,7 @@ public class ProfilFragment extends Fragment {
             return;
         }
 
-        // Délégation au ViewModel — aucun Thread ici
+        // Délégation au ViewModel, aucun Thread ici
         viewModel.loadUser(userId);
     }
 

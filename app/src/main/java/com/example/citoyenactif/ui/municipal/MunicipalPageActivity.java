@@ -16,6 +16,7 @@ import com.example.citoyenactif.ui.citizen.fragment.ReportMapFragment;
 import com.example.citoyenactif.ui.municipal.fragment.AgentProfilFragment;
 import com.example.citoyenactif.ui.municipal.fragment.ReportsListMunicipalFragment;
 import com.example.citoyenactif.util.SessionManager;
+import com.example.citoyenactif.work.ReportSyncScheduler;
 
 /**
  * Activité principale de l'espace municipal.
@@ -31,6 +32,7 @@ import com.example.citoyenactif.util.SessionManager;
  * - DataBinding pour lier le layout XML
  * - Fragments pour afficher les différentes sections
  * - BottomNavigationView pour la navigation
+ * - WorkManager (ReportSyncScheduler) pour rafraîchir la liste toutes les 15 minutes
  */
 public class MunicipalPageActivity extends BaseActivity {
 
@@ -45,6 +47,7 @@ public class MunicipalPageActivity extends BaseActivity {
      * - le fragment par défaut
      * - la navigation du bas (BottomNavigation)
      * - le bouton de déconnexion
+     * - la synchronisation périodique des rapports
      */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,6 +62,9 @@ public class MunicipalPageActivity extends BaseActivity {
         // Place le header au-dessus des fragments dans la hiérarchie des vues
         binder.header.bringToFront();
         binder.header.invalidate();
+
+        // L'agent est connecté : on planifie le rafraîchissement des rapports toutes les 15 min
+        ReportSyncScheduler.schedule(this);
 
         /**
          * Listener du bouton logout.
@@ -135,11 +141,15 @@ public class MunicipalPageActivity extends BaseActivity {
      * Déconnecte l'utilisateur actuellement connecté.
      *
      * Étapes :
-     * 1. Suppression de la session avec SessionManager
-     * 2. Redirection vers l'écran d'authentification
-     * 3. Suppression de l'historique d'activités
+     * 1. Arrêt de la synchronisation périodique (téléphone partagé entre agents)
+     * 2. Suppression de la session avec SessionManager
+     * 3. Redirection vers l'écran d'authentification
+     * 4. Suppression de l'historique d'activités
      */
     private void logout() {
+
+        // Plus de synchronisation tant qu'aucun agent n'est connecté
+        ReportSyncScheduler.cancel(this);
 
         // Suppression de la session utilisateur
         SessionManager.clear(this);

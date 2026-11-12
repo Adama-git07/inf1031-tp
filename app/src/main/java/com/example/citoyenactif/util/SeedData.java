@@ -15,22 +15,21 @@ import java.util.concurrent.Executors;
  * Classe utilitaire pour insérer des données par défaut dans la BD
  * sans supprimer les données existantes.
  *
- * Deux types de seed :
+ * Deux types de données :
  *   - Agents municipaux (comptes par défaut)
- *   - Rapports de bris (données de démonstration autour de Trois-Rivières)
+ *   - Signalements de démonstration autour de Trois-Rivières
  */
 public class SeedData {
 
     /**
-     * Ajoute une liste d'agents dans la BD s'ils n'existent pas déjà.
-     * - Ne supprime rien
-     * - Évite les doublons grâce à agentNumber (unique)
+     * Ajoute les agents par défaut s'ils n'existent pas déjà.
+     * On ne supprime rien, et le numéro d'agent évite les doublons.
      */
     public static void seedAgents() {
         Executors.newSingleThreadExecutor().execute(() -> {
             DataBase db = CitoyenActifApp.getInstance().getDatabase();
 
-            // 1) Définis ici tes agents "manuels"
+            // Liste des agents à créer
             List<AgentEntity> toInsert = new ArrayList<>();
 
             AgentEntity a1 = new AgentEntity();
@@ -47,7 +46,7 @@ public class SeedData {
             a2.password    = "1234";
             toInsert.add(a2);
 
-            // 2) Insertion safe : on vérifie si agentNumber existe déjà
+            // On insère seulement si le numéro d'agent n'existe pas déjà
             for (AgentEntity a : toInsert) {
                 AgentEntity existing = db.agentDao().findByAgentNumber(a.agentNumber);
                 if (existing == null) {
@@ -58,15 +57,14 @@ public class SeedData {
     }
 
     /**
-     * Insère des rapports de démonstration autour de Trois-Rivières.
-     * - Ne réinsère pas si des rapports existent déjà (vérification par COUNT)
-     * - Coordonnées réelles de rues de Trois-Rivières
+     * Insère des signalements de démonstration autour de Trois-Rivières.
+     * Si la table contient déjà des signalements, on ne fait rien.
      */
     public static void seedReports() {
         Executors.newSingleThreadExecutor().execute(() -> {
             DataBase db = CitoyenActifApp.getInstance().getDatabase();
 
-            // Ne pas réinsérer si des rapports existent déjà
+            // Ne pas réinsérer si des signalements existent déjà
             if (db.reportDao().countReports() > 0) return;
 
             List<ReportEntity> reports = new ArrayList<>();
@@ -161,12 +159,7 @@ public class SeedData {
                     46.3520, -72.5550, 1
             ));
 
-            // 3) Insertion de tous les rapports dans Room
-            for (ReportEntity r : reports) {
-                db.reportDao().insert(r);
-            }
-
-            // Rapports près de l'UQTR — zone piétonne campus
+            // Signalements près de l'UQTR (zone du campus)
             reports.add(makeReport(
                     "Trottoir glissant",
                     "Trottoir verglacé devant le pavillon Ringuet, dangereux.",
@@ -198,20 +191,25 @@ public class SeedData {
                     ReportStatus.EN_ATTENTE,
                     46.3528, -72.5770, 1
             ));
+
+            // Insertion dans Room, une fois que la liste est complète
+            for (ReportEntity r : reports) {
+                db.reportDao().insert(r);
+            }
         });
     }
 
     /**
-     * Méthode helper pour créer un ReportEntity facilement.
+     * Crée un ReportEntity à partir des valeurs données.
      *
-     * @param title       titre du rapport
+     * @param title       titre du signalement
      * @param description description détaillée
      * @param category    catégorie (VOIRIE, ECLAIRAGE, etc.)
-     * @param status      statut initial (EN_ATTENTE, EN_COURS, etc.)
+     * @param status      statut de départ (EN_ATTENTE, EN_COURS, etc.)
      * @param lat         latitude GPS
      * @param lng         longitude GPS
-     * @param citizenId   id du citoyen auteur
-     * @return ReportEntity prêt à insérer dans Room
+     * @param citizenId   identifiant du citoyen auteur
+     * @return un ReportEntity prêt à insérer dans Room
      */
     private static ReportEntity makeReport(String title, String description,
                                            ReportCategory category, ReportStatus status,
@@ -229,7 +227,7 @@ public class SeedData {
     }
 
     /**
-     * Ajoute UN agent (utile si tu veux appeler ça depuis un bouton admin).
+     * Ajoute UN agent (utile pour un bouton d'administration).
      * Ne fait rien si l'agent existe déjà.
      */
     public static void addOneAgent(String firstName, String name,
@@ -237,7 +235,7 @@ public class SeedData {
         Executors.newSingleThreadExecutor().execute(() -> {
             DataBase db = CitoyenActifApp.getInstance().getDatabase();
 
-            // Vérification doublon
+            // Vérification du doublon
             AgentEntity existing = db.agentDao().findByAgentNumber(agentNumber);
             if (existing != null) return;
 

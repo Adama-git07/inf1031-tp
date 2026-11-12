@@ -38,12 +38,12 @@
         android:name="com.example.citoyenactif.permission.READ_REPORTS"
         android:description="@string/perm_read_reports_desc"
         android:label="@string/perm_read_reports_label"
-        android:protectionLevel="normal" />
+        android:protectionLevel="signature" />
     <permission
         android:name="com.example.citoyenactif.permission.WRITE_REPORTS"
         android:description="@string/perm_write_reports_desc"
         android:label="@string/perm_write_reports_label"
-        android:protectionLevel="dangerous" />
+        android:protectionLevel="signature" />
 
     <application
         android:name=".CitoyenActifApp"

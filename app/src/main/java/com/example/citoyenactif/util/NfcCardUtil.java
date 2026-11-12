@@ -40,9 +40,9 @@ public final class NfcCardUtil {
 
     /** Format strict attendu : v1:<numéro>:<16 caractères hexadécimaux>. */
     private static final Pattern FORMAT =
-            Pattern.compile("^" + VERSION + ":([A-Za-z0-9-]{3,20}):([0-9a-f]{16})$");
+            Pattern.compile("^" + VERSION + ":([A-Za-z0-9-]{1,20}):([0-9a-f]{16})$");
 
-    private static final Pattern AGENT_NUMBER = Pattern.compile("^[A-Za-z0-9-]{3,20}$");
+    private static final Pattern AGENT_NUMBER = Pattern.compile("^[A-Za-z0-9-]{1,20}$");
 
     private NfcCardUtil() { }
 

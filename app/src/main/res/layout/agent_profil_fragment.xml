@@ -2,7 +2,12 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <data />
+    <data>
+        <!-- L'agent connecté : les textes se remplissent tout seuls avec @{...} -->
+        <variable
+            name="agent"
+            type="com.example.citoyenactif.data.local.entity.AgentEntity" />
+    </data>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -14,7 +19,7 @@
             android:layout_height="wrap_content"
             android:padding="16dp">
 
-            <!-- ── Carte Avatar + Nom ─────────────────────────────────────── -->
+            <!-- Carte Avatar + Nom -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardAvatar"
                 android:layout_width="0dp"
@@ -43,7 +48,7 @@
                         android:background="#E8F5E9"
                         android:padding="12dp" />
 
-                    <!-- Nom + rôle -->
+                    <!-- Nom complet + rôle -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_weight="1"
@@ -51,11 +56,12 @@
                         android:orientation="vertical"
                         android:layout_marginStart="16dp">
 
+                        <!-- Prénom + nom, calculés directement dans le layout -->
                         <TextView
                             android:id="@+id/tvAgentFullName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Nom Prénom"
+                            android:text='@{(agent.firstName ?? "") + " " + (agent.name ?? "")}'
                             android:textStyle="bold"
                             android:textSize="20sp" />
 
@@ -74,7 +80,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- ── Carte Détails ──────────────────────────────────────────── -->
+            <!-- Carte Détails -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardDetails"
                 android:layout_width="0dp"
@@ -121,7 +127,7 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="—"
+                            android:text='@{agent.name ?? "—"}'
                             android:layout_marginStart="12dp" />
 
                     </LinearLayout>
@@ -145,7 +151,7 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="—"
+                            android:text='@{agent.firstName ?? "—"}'
                             android:layout_marginStart="12dp" />
 
                     </LinearLayout>
@@ -168,7 +174,7 @@
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:text="—"
+                            android:text='@{"Matricule : " + (agent.agentNumber ?? "—")}'
                             android:layout_marginStart="12dp" />
 
                     </LinearLayout>

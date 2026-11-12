@@ -8,6 +8,7 @@ import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.data.remote.FirestoreRepository;
 import com.example.citoyenactif.model.dto.ReportCreateDTO;
 import com.example.citoyenactif.model.enums.ReportStatus;
+import com.example.citoyenactif.provider.ReportContract;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,6 +23,9 @@ import java.util.concurrent.Executors;
  *
  * Flux d'écriture : UI → ViewModel → ReportRepository → Room puis → Firestore
  * Flux de lecture : Firestore pull (démarrage) → Room insertOrReplace → LiveData notifie l'UI
+ *
+ * Après chaque écriture dans Room, on prévient aussi les applications qui lisent
+ * les rapports via le ContentProvider (notifyProvider).
  */
 public class ReportRepository {
 
@@ -33,6 +37,12 @@ public class ReportRepository {
         reportDao = CitoyenActifApp.getInstance().getDatabase().reportDao();
         firestore = new FirestoreRepository();
         executor  = Executors.newSingleThreadExecutor();
+    }
+
+    /** Prévient les apps externes (ContentObserver) que les rapports ont changé. */
+    private void notifyProvider() {
+        CitoyenActifApp.getInstance().getContentResolver()
+                .notifyChange(ReportContract.CONTENT_URI, null);
     }
 
     //  ÉCRITURE — Room + Firestore
@@ -67,6 +77,7 @@ public class ReportRepository {
             // 1. Insertion Room → récupération de l'ID généré
             long generatedId = reportDao.insert(report);
             report.id = (int) generatedId;
+            notifyProvider();
 
             // 2. Push Firestore avec le même ID
             firestore.pushReport(report);
@@ -82,6 +93,7 @@ public class ReportRepository {
             if (report.citizenId != requestingUserId) return;
             if (report.status != ReportStatus.EN_ATTENTE) return;
             reportDao.update(report);
+            notifyProvider();
             firestore.pushReport(report);
         });
     }
@@ -92,6 +104,7 @@ public class ReportRepository {
     public void delete(ReportEntity report) {
         executor.execute(() -> {
             reportDao.delete(report);
+            notifyProvider();
             firestore.deleteReport(report.id);
         });
     }
@@ -102,6 +115,7 @@ public class ReportRepository {
     public void updateStatus(long reportId, String status) {
         executor.execute(() -> {
             reportDao.updateStatus(reportId, status);
+            notifyProvider();
             firestore.pushStatusUpdate(reportId, status);
         });
     }
@@ -113,6 +127,7 @@ public class ReportRepository {
     public void resolveWithProof(long reportId, String proofUri, long agentId) {
         executor.execute(() -> {
             reportDao.resolveWithProof(reportId, ReportStatus.RESOLU.name(), proofUri, agentId);
+            notifyProvider();
             firestore.pushResolveWithProof(reportId, proofUri, agentId);
         });
     }
@@ -124,6 +139,7 @@ public class ReportRepository {
     public void ignoreWithReason(long reportId, String reason, long agentId) {
         executor.execute(() -> {
             reportDao.ignoreWithReason(reportId, ReportStatus.IGNORE.name(), reason, agentId);
+            notifyProvider();
             firestore.pushIgnoreWithReason(reportId, reason, agentId);
         });
     }
@@ -140,7 +156,10 @@ public class ReportRepository {
      */
     public void syncFromFirestore() {
         firestore.pullAllReports(report ->
-                executor.execute(() -> reportDao.insertOrReplace(report))
+                executor.execute(() -> {
+                    reportDao.insertOrReplace(report);
+                    notifyProvider();
+                })
         );
     }
 

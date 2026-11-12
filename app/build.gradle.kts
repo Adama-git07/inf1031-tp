@@ -72,6 +72,8 @@ dependencies {
 
     // WorkManager — synchronisation périodique (15 min) des rapports côté agents
     implementation("androidx.work:work-runtime:2.10.5")
+    // Guava : fournit ListenableFuture, utilisé par la classe Worker
+    implementation("com.google.guava:guava:32.1.3-android")
 
     // Retrofit + OkHttp + Gson
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

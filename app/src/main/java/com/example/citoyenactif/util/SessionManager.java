@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 /**
  * Classe utilitaire permettant de gérer la session utilisateur
@@ -37,6 +38,14 @@ public class SessionManager {
      * est un agent ou non.
      */
     private static final String KEY_IS_AGENT = "is_agent";
+
+    /**
+     * Nom du sujet FCM d'un citoyen. Le serveur de notifications publie sur ce sujet
+     * (même format dans server/index.js : citizen-<id>).
+     */
+    public static String citizenTopic(long citizenId) {
+        return "citizen-" + citizenId;
+    }
 
     /**
      * Connecte anonymement l'utilisateur à Firebase Authentication.
@@ -128,9 +137,19 @@ public class SessionManager {
     /**
      * Supprime les informations de session stockées et déconnecte
      * l'utilisateur de Firebase Authentication.
+     *
+     * Si c'était un citoyen, on le désabonne aussi de son sujet FCM :
+     * le téléphone peut être partagé, le prochain utilisateur ne doit pas
+     * recevoir les notifications du précédent.
+     *
      * @param context contexte de l'application
      */
     public static void clear(Context context) {
+        long userId = getUserId(context);
+        if (userId > 0 && !isAgent(context)) {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(citizenTopic(userId));
+        }
+
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
                 .edit()
                 .clear()

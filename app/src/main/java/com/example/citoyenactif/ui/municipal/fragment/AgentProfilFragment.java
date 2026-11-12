@@ -17,13 +17,14 @@ import com.example.citoyenactif.util.SessionManager;
 /**
  * Fragment Profil agent municipal.
  *
- * Affiche toutes les informations de l'agent connecté :
- *   - Nom complet, rôle
- *   - Nom, prénom, matricule (numéro d'agent)
+ * Utilise DataBinding :
+ *   - Le layout agent_profil_fragment.xml déclare <variable name="agent"/>
+ *   - Les textes (nom, prénom, matricule) se remplissent avec @{agent.xxx}
+ *   - Le Fragment n'appelle plus setText() sur chaque vue
  *
  * Architecture MVVM :
  *   - AgentProfileViewModel charge l'agent depuis Room en arrière-plan.
- *   - Le Fragment observe le LiveData et peuple les vues.
+ *   - Le Fragment observe le LiveData et donne l'agent au binding.
  */
 public class AgentProfilFragment extends Fragment {
 
@@ -36,25 +37,17 @@ public class AgentProfilFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         binder = AgentProfilFragmentBinding.inflate(inflater, container, false);
+        binder.setLifecycleOwner(getViewLifecycleOwner());
 
         viewModel = new ViewModelProvider(this).get(AgentProfileViewModel.class);
 
-        // ── Observation des données agent ──────────────────────────────────────
+        // Quand l'agent est chargé, on le donne au layout : les textes se mettent à jour seuls
         viewModel.getAgent().observe(getViewLifecycleOwner(), agent -> {
             if (agent == null) {
                 Toast.makeText(getContext(), "Agent introuvable", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            // Carte 1 — Nom complet + rôle
-            String fullName = (safe(agent.firstName) + " " + safe(agent.name)).trim();
-            binder.tvAgentFullName.setText(fullName.isEmpty() ? "Agent municipal" : fullName);
-            binder.tvAgentRole.setText("Agent municipal");
-
-            // Carte 2 — Détails
-            binder.tvAgentName.setText(safe(agent.name, "—"));
-            binder.tvAgentFirstName.setText(safe(agent.firstName, "—"));
-            binder.tvAgentNumber.setText("Matricule : " + safe(agent.agentNumber, "—"));
+            binder.setAgent(agent);
         });
 
         loadConnectedAgent();
@@ -62,6 +55,7 @@ public class AgentProfilFragment extends Fragment {
         return binder.getRoot();
     }
 
+    /** Demande au ViewModel de charger l'agent connecté. */
     private void loadConnectedAgent() {
         boolean isAgent = SessionManager.isAgent(requireContext());
         long agentId    = SessionManager.getUserId(requireContext());
@@ -72,14 +66,6 @@ public class AgentProfilFragment extends Fragment {
         }
 
         viewModel.loadAgent(agentId);
-    }
-
-    private String safe(String s) {
-        return s == null ? "" : s;
-    }
-
-    private String safe(String s, String fallback) {
-        return (s == null || s.isEmpty()) ? fallback : s;
     }
 
     @Override

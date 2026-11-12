@@ -11,6 +11,7 @@ import com.example.citoyenactif.data.local.dao.ReportDao;
 import com.example.citoyenactif.data.local.database.DatabaseClient;
 import com.example.citoyenactif.data.local.entity.ReportEntity;
 import com.example.citoyenactif.data.remote.FirestoreRepository;
+import com.example.citoyenactif.provider.ReportContract;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -46,6 +47,10 @@ public class ReportSyncWorker extends Worker {
             for (ReportEntity report : remoteReports) {
                 dao.insertOrReplace(report);
             }
+
+            // Prévient les apps externes (ContentProvider) que la liste a changé
+            getApplicationContext().getContentResolver()
+                    .notifyChange(ReportContract.CONTENT_URI, null);
 
             Log.d(TAG, "Synchronisation terminée : " + remoteReports.size() + " rapport(s)");
             return Result.success();

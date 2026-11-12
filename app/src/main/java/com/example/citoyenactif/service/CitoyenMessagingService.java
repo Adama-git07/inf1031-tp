@@ -1,31 +1,37 @@
 package com.example.citoyenactif.service;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.TaskStackBuilder;
+import androidx.core.content.ContextCompat;
 
 import com.example.citoyenactif.R;
-import com.example.citoyenactif.ui.authentification.AuthentificationActivity;
+import com.example.citoyenactif.ui.report.ReportActivity;
 import com.example.citoyenactif.util.SessionManager;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 /**
  * Service Firebase Cloud Messaging (FCM).
- * Reçoit les notifications push envoyées depuis la console Firebase
- * (ou depuis un serveur backend) et les affiche dans la barre de statut.
- * Cas d'usage typiques pour CitoyenActif :
- *   - Notifier un citoyen que son rapport est passé à EN_COURS ou RESOLU
- *   - Notifier un agent qu'un nouveau rapport est disponible
- *   - Diffuser un message municipal à tous les citoyens
-
+ * Reçoit les messages envoyés par le serveur de notifications (dossier server/)
+ * et les affiche dans la barre de statut.
+ *
+ * Cas d'usage pour Citoyen Actif :
+ *   - Notifier un citoyen que son signalement est passé à EN_COURS, RESOLU ou IGNORE
+ *
+ * Le serveur envoie des messages "data" (title, body, reportId) : onMessageReceived
+ * est donc appelé que l'application soit au premier plan ou en arrière-plan.
+ * Un clic sur la notification ouvre le signalement concerné.
  */
 public class CitoyenMessagingService extends FirebaseMessagingService {
 
@@ -51,8 +57,7 @@ public class CitoyenMessagingService extends FirebaseMessagingService {
     // ─── Réception d'un message ───────────────────────────────────────────────
 
     /**
-     * Appelé quand un message FCM est reçu alors que l'application est au
-     * premier plan (foreground).
+     * Appelé quand un message FCM est reçu.
      *
      * @param message message FCM reçu (peut contenir notification et/ou data)
      */
@@ -86,7 +91,7 @@ public class CitoyenMessagingService extends FirebaseMessagingService {
     // ─── Affichage de la notification ────────────────────────────────────────
 
     /**
-     * Crée le canal de notification.
+     * Crée le canal de notification (obligatoire depuis Android 8).
      * Appelé au démarrage de l'application (CitoyenActifApp) ET avant chaque affichage.
      */
     public static void createNotificationChannel(Context context) {
@@ -96,7 +101,7 @@ public class CitoyenMessagingService extends FirebaseMessagingService {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription(CHANNEL_DESC);
             manager.createNotificationChannel(channel);
@@ -105,7 +110,6 @@ public class CitoyenMessagingService extends FirebaseMessagingService {
 
     /**
      * Crée et affiche une notification système dans la barre de statut.
-
      *
      * @param title    titre de la notification
      * @param body     texte de la notification
@@ -113,33 +117,53 @@ public class CitoyenMessagingService extends FirebaseMessagingService {
      */
     private void showNotification(String title, String body, String reportId) {
 
+        // Android 13+ : sans la permission, on n'affiche rien
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "Permission POST_NOTIFICATIONS refusée : notification ignorée");
+            return;
+        }
+
         createNotificationChannel(this);
         NotificationManager manager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        // Id unique par rapport (ou par instant si on ne le connaît pas)
-        int notificationId = (reportId != null)
-                ? reportId.hashCode()
-                : (int) System.currentTimeMillis();
+        // Id du signalement (-1 si absent ou invalide)
+        int id = -1;
+        if (reportId != null) {
+            try {
+                id = Integer.parseInt(reportId);
+            } catch (NumberFormatException ignored) { }
+        }
 
-        // Intent au clic : ouvre l'application
-        Intent intent = new Intent(this, AuthentificationActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        // Id unique par signalement : une nouvelle notification remplace l'ancienne du même rapport
+        int notificationId = (id != -1) ? id : (int) System.currentTimeMillis();
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this,
-                notificationId,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
+        // Clic : ouvre le signalement, avec l'écran principal du citoyen derrière (bouton retour)
+        PendingIntent pendingIntent = null;
+        if (id != -1) {
+            Intent intent = new Intent(this, ReportActivity.class);
+            intent.putExtra(ReportActivity.EXTRA_REPORT_ID, id);
+
+            // Le parent de ReportActivity est déclaré dans le manifest (parentActivityName)
+            pendingIntent = TaskStackBuilder.create(this)
+                    .addNextIntentWithParentStack(intent)
+                    .getPendingIntent(notificationId,
+                            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_location_pin)
                 .setContentTitle(title)
                 .setContentText(body)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
                 .setAutoCancel(true)                          // disparaît au clic
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setContentIntent(pendingIntent);
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        if (pendingIntent != null) {
+            builder.setContentIntent(pendingIntent);
+        }
 
         manager.notify(notificationId, builder.build());
     }
